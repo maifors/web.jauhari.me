@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Agile Spin Wheel Quiz - Kahoot Style</title>
+<title>Agile Spin Wheel Quiz - Kahoot Style with New Player</title>
 <style>
   /* Reset & base */
   * {
@@ -84,6 +84,14 @@
   }
   #play-again-btn:hover {
     background: #0a2148;
+  }
+  #new-player-btn {
+    background: #fcd581;
+    color: #0f3460;
+    box-shadow: 0 5px 10px rgba(252, 213, 129, 0.8);
+  }
+  #new-player-btn:hover {
+    background: #e6ba4b;
   }
 
   /* Result text */
@@ -254,6 +262,7 @@
   <canvas id="wheel" width="500" height="500" role="img" aria-label="Spin wheel with Agile quiz topics"></canvas>
   <button id="spin-btn" aria-live="polite" aria-disabled="true" disabled>Spin the Wheel!</button>
   <button id="play-again-btn" style="display:none;">Play Again</button>
+  <button id="new-player-btn" style="display:none;">New Player</button>
   <div id="result" aria-live="polite" aria-atomic="true"></div>
   <div id="scoreboard" aria-live="polite" aria-atomic="true">Correct Answers: <span id="score">0</span></div>
 </main>
@@ -348,6 +357,7 @@
 
   const spinBtn = document.getElementById('spin-btn');
   const playAgainBtn = document.getElementById('play-again-btn');
+  const newPlayerBtn = document.getElementById('new-player-btn');
   const resultDiv = document.getElementById('result');
   const scoreSpan = document.getElementById('score');
 
@@ -365,11 +375,11 @@
   // Track user score, questions asked
   let score = 0;
   let playerName = localStorage.getItem('agilePlayerName') || '';
-  let questionsAsked = new Set();   // store indexes of questions asked
+  let questionsAsked = new Set();
   let questionsCount = 0;
   const maxQuestions = 6;
 
-  // --- Draw Wheel ---
+  // --- Helper functions ---
   function drawWheel() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for(let i = 0; i < numSegments; i++) {
@@ -407,23 +417,32 @@
     ctx.fill();
   }
 
-  // --- Spin Logic ---
+  function easeOut(t, b, c, d) {
+    t /= d;
+    t--;
+    return c*(t*t*t + 1) + b;
+  }
+
+  // --- Spin logic ---
   function spin() {
     if(questionsAsked.size >= maxQuestions) {
-      alert(`You have answered all ${maxQuestions} questions! Thanks for playing, ${playerName}.`);
+      alert(`You answered all ${maxQuestions} questions! Thanks, ${playerName}.`);
       spinBtn.disabled = true;
       spinBtn.setAttribute('aria-disabled', 'true');
       playAgainBtn.style.display = 'inline-block';
+      newPlayerBtn.style.display = 'inline-block';
       resultDiv.textContent = `Game over! You scored ${score} out of ${maxQuestions}, ${playerName}.`;
+      closeQuiz();
       return;
     }
     spinBtn.disabled = true;
     spinBtn.setAttribute('aria-disabled', 'true');
     playAgainBtn.style.display = 'none';
+    newPlayerBtn.style.display = 'none';
     resultDiv.textContent = '';
-    spinAngleStart = Math.random() * 10 + 10; // degrees/frame start
+    spinAngleStart = Math.random() * 10 + 10;
     spinTime = 0;
-    spinTimeTotal = Math.random() * 3000 + 4000; // ms
+    spinTimeTotal = Math.random() * 3000 + 4000;
     rotateWheel();
   }
 
@@ -439,7 +458,7 @@
     spinTimeout = setTimeout(rotateWheel, 30);
   }
 
-  // Stop wheel & pick a segment that hasn’t been asked yet
+  // Stop & select unasked question
   function stopRotateWheel() {
     clearTimeout(spinTimeout);
     const degrees = startAngle * 180 / Math.PI + 90;
@@ -447,42 +466,35 @@
     let index = Math.floor((360 - (degrees % 360)) / arcd);
     if(index >= numSegments) index = 0;
 
-    // Pick a question index not asked yet
+    // Find unasked question
     if(questionsAsked.has(index)) {
-      // Question already asked, find next unasked index
       for(let i=0; i<numSegments; i++) {
         if(!questionsAsked.has(i)) {
           index = i;
           break;
         }
       }
-      // If all asked, end game
       if(questionsAsked.has(index)) {
-        alert(`You have answered all ${maxQuestions} questions! Thanks for playing, ${playerName}.`);
+        alert(`You answered all ${maxQuestions} questions! Thanks, ${playerName}.`);
         spinBtn.disabled = true;
         spinBtn.setAttribute('aria-disabled', 'true');
         playAgainBtn.style.display = 'inline-block';
-        resultDiv.textContent = `Game over! Total score: ${score} out of ${maxQuestions}, ${playerName}.`;
+        newPlayerBtn.style.display = 'inline-block';
+        resultDiv.textContent = `Game over! You scored ${score} out of ${maxQuestions}, ${playerName}.`;
         closeQuiz();
         return;
       }
     }
 
-    const selectedSegment = segments[index];
+    const segment = segments[index];
     questionsAsked.add(index);
     questionsCount++;
-    resultDiv.textContent = `${playerName}, you got: ${selectedSegment.name}!`;
+    resultDiv.textContent = `${playerName}, you got: ${segment.name}!`;
 
-    showQuiz(selectedSegment.question, questionsCount, maxQuestions);
+    showQuiz(segment.question, questionsCount, maxQuestions);
   }
 
-  function easeOut(t, b, c, d) {
-    t /= d;
-    t--;
-    return c*(t*t*t + 1) + b;
-  }
-
-  // --- Quiz Modal ---
+  // --- Quiz modal ---
   function showQuiz(questionObj, current, total) {
     quizProgressDiv.textContent = `Question ${current} of ${total}`;
     quizQuestionDiv.textContent = questionObj.q;
@@ -498,12 +510,12 @@
       btn.setAttribute('type', 'button');
       btn.addEventListener('click', () => {
         if(idx === questionObj.answer) {
-          quizFeedbackDiv.style.color = '#7CFC00'; // bright lime green
+          quizFeedbackDiv.style.color = '#7CFC00';
           quizFeedbackDiv.textContent = 'Correct! 🎉';
           quizOptionsDiv.querySelectorAll('button').forEach(b => b.disabled = true);
           playAgainBtn.style.display = (questionsAsked.size >= maxQuestions) ? 'inline-block' : 'none';
+          newPlayerBtn.style.display = (questionsAsked.size >= maxQuestions) ? 'inline-block' : 'none';
           incrementScore();
-          // If last question, change close button text
           if(questionsAsked.size === maxQuestions) {
             closeQuizBtn.textContent = 'Finish';
           }
@@ -528,6 +540,7 @@
       spinBtn.disabled = true;
       spinBtn.setAttribute('aria-disabled', 'true');
       playAgainBtn.style.display = 'inline-block';
+      newPlayerBtn.style.display = 'inline-block';
     }
   });
 
@@ -537,16 +550,17 @@
     quizFeedbackDiv.textContent = '';
   }
 
-  // --- Score Management ---
+  // --- Score ---
   function incrementScore() {
     score++;
     scoreSpan.textContent = score;
   }
 
-  // --- Name modal handling ---
+  // --- Name modal ---
   function enableSpinForName(name) {
     playerName = name.trim();
     localStorage.setItem('agilePlayerName', playerName);
+    resetGame();
     resultDiv.textContent = `Hello, ${playerName}! Ready to spin the wheel?`;
     nameModal.style.display = 'none';
     spinBtn.disabled = false;
@@ -555,13 +569,43 @@
   }
 
   nameSubmitBtn.addEventListener('click', () => {
-    const nameVal = nameInput.value;
-    if(nameVal && nameVal.trim().length > 0) {
-      enableSpinForName(nameVal);
+    const val = nameInput.value;
+    if(val && val.trim().length > 0) {
+      enableSpinForName(val);
     } else {
       alert('Please enter your name to continue.');
       nameInput.focus();
     }
+  });
+
+  // --- Reset game for new player or replay ---
+  function resetGame() {
+    questionsAsked.clear();
+    questionsCount = 0;
+    score = 0;
+    scoreSpan.textContent = score;
+    resultDiv.textContent = '';
+    playAgainBtn.style.display = 'none';
+    newPlayerBtn.style.display = 'none';
+    spinBtn.disabled = false;
+    spinBtn.setAttribute('aria-disabled', 'false');
+    drawWheel();
+  }
+
+  // New player button click handler
+  newPlayerBtn.addEventListener('click', () => {
+    // Clear current player
+    localStorage.removeItem('agilePlayerName');
+    playerName = '';
+    resetGame();
+    nameInput.value = '';
+    nameModal.style.display = 'block';
+    spinBtn.disabled = true;
+    spinBtn.setAttribute('aria-disabled', 'true');
+    resultDiv.textContent = '';
+    playAgainBtn.style.display = 'none';
+    newPlayerBtn.style.display = 'none';
+    nameInput.focus();
   });
 
   // --- Initialize ---
@@ -582,19 +626,11 @@
   // Events
   spinBtn.addEventListener('click', spin);
   playAgainBtn.addEventListener('click', () => {
-    // Reset game state
-    questionsAsked.clear();
-    questionsCount = 0;
-    score = 0;
-    scoreSpan.textContent = score;
+    resetGame();
     resultDiv.textContent = `Ready to spin again, ${playerName}?`;
-    playAgainBtn.style.display = 'none';
-    spinBtn.disabled = false;
-    spinBtn.setAttribute('aria-disabled', 'false');
-    spinBtn.focus();
   });
 
-  // Accessibility: close quiz modal with ESC or outside click
+  // Accessibility: close quiz modal
   window.addEventListener('click', e => {
     if (e.target === quizModal) {
       closeQuiz();
