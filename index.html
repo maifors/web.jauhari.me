@@ -3,10 +3,278 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Agile Game Hub - Choose Your Game</title>
+<title>Agile Game Hub - Full Demo Fixed</title>
 <style>
-  /* Ensure all styles are included here */
-  /* Example: .modal { background-color: #fff; border-radius: 5px; } */
+  /* Base styles (same as before) */
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a2e;
+    margin: 0; padding: 0;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: #16213e;
+    padding: 15px 20px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+  }
+  header h1 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 2rem;
+    color: #e94560;
+    letter-spacing: 1.5px;
+  }
+  main {
+    flex: 1;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 20px 40px;
+  }
+  /* Name Modal */
+  #name-modal .modal-content {
+    align-items: center;
+    text-align: center;
+  }
+  #name-modal h2 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #fcd581;
+  }
+  #player-name-input {
+    width: 100%;
+    max-width: 320px;
+    font-size: 1.2rem;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    margin-bottom: 20px;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  }
+  #name-submit-btn {
+    background: #e94560;
+    padding: 15px 40px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border-radius: 12px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(233,69,96,0.7);
+    transition: background-color 0.3s ease;
+  }
+  #name-submit-btn:hover {
+    background-color: #d43452;
+  }
+  /* Game Selection */
+  #game-selection {
+    text-align: center;
+    margin-top: 20px;
+    display: none;
+  }
+  #game-selection h2 {
+    font-size: 2rem;
+    color: #fcd581;
+  }
+  .game-choice {
+    margin: 15px 10px;
+    padding: 18px 30px;
+    font-size: 1.3rem;
+    border-radius: 15px;
+    cursor: pointer;
+    border: 3px solid #e94560;
+    background: transparent;
+    color: white;
+    font-weight: 700;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+    user-select: none;
+  }
+  .game-choice:hover {
+    background-color: #e94560;
+  }
+  /* Buttons */
+  button {
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 36px;
+    font-size: 1.1rem;
+    margin: 10px 8px;
+    transition: background-color 0.3s ease;
+    outline-offset: 2px;
+  }
+  button:disabled {
+    background: #6f6f6f;
+    cursor: not-allowed;
+    box-shadow: none;
+    color: #ccc;
+  }
+  #spin-btn {
+    background: #e94560;
+    color: white;
+    box-shadow: 0 5px 10px rgba(233, 69, 96, 0.7);
+    display: none;
+  }
+  #spin-btn:hover:not(:disabled) {
+    background-color: #d43452;
+  }
+  #play-again-btn {
+    background: #0f3460;
+    color: #fff;
+    box-shadow: 0 5px 10px rgba(15, 52, 96, 0.7);
+    display: none;
+  }
+  #play-again-btn:hover {
+    background: #0a2148;
+  }
+  #new-player-btn {
+    background: #fcd581;
+    color: #0f3460;
+    box-shadow: 0 5px 10px rgba(252, 213, 129, 0.8);
+    display: none;
+  }
+  #new-player-btn:hover {
+    background: #e6ba4b;
+  }
+  /* Wheel canvas */
+  #wheel {
+    border-radius: 50%;
+    box-shadow: 0 0 25px rgba(233, 69, 96, 0.7);
+    max-width: 100%;
+    height: auto;
+    margin: 15px auto 25px;
+    background: white;
+    display: none;
+  }
+  /* Text outputs */
+  #result {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 15px;
+    min-height: 40px;
+    text-align: center;
+    color: #e94560;
+  }
+  #scoreboard, #timer {
+    margin-top: 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    text-align: center;
+  }
+  #timer {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fcd581;
+  }
+  /* Quiz Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(2px);
+  }
+  .modal-content {
+    background-color: #0f3460;
+    margin: 6% auto;
+    padding: 30px 40px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 520px;
+    box-shadow: 0 0 40px rgba(233, 69, 96, 0.85);
+    color: white;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-content:focus {
+    outline: none;
+  }
+  .question {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 25px;
+  }
+  .progress {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: #fcd581;
+  }
+  .options button {
+    background: #e94560;
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 8px 0;
+    font-size: 1.15rem;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background-color 0.3s ease;
+    color: white;
+    box-shadow: 0 3px 6px rgba(233,69,96,0.7);
+  }
+  .options button:hover:not(:disabled) {
+    background-color: #d43452;
+  }
+  .options button:disabled {
+    background-color: #6f6f6f;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .feedback {
+    margin-top: 18px;
+    font-weight: 700;
+    font-size: 1.3rem;
+    height: 36px;
+  }
+  #close-quiz-btn {
+    align-self: flex-end;
+    margin-top: 25px;
+    background: #fcd581;
+    color: #0f3460;
+    padding: 12px 25px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(252, 213, 129, 0.8);
+    transition: background-color 0.3s ease;
+  }
+  #close-quiz-btn:hover {
+    background: #e6ba4b;
+  }
+  /* Responsive */
+  @media (max-width: 600px) {
+    main {
+      max-width: 100%;
+      padding: 15px 10px;
+    }
+    button, .game-choice {
+      width: 100%;
+      font-size: 1.1rem;
+      padding: 16px 0;
+      margin: 10px 0;
+      display: block;
+      box-sizing: border-box;
+    }
+    #player-name-input {
+      max-width: 100%;
+    }
+    .modal-content {
+      padding: 20px 25px;
+      margin-top: 20%;
+    }
+  }
 </style>
 </head>
 <body>
@@ -17,8 +285,8 @@
 
 <main>
   <!-- Name Input Modal -->
-  <div id="name-modal" class="modal" aria-modal="true" role="dialog" aria-labelledby="name-modal-title" aria-hidden="false" style="display: block;">
-    <div class="modal-content" tabindex="0" style="max-width: 400px; margin: 10% auto;">
+  <div id="name-modal" class="modal" aria-modal="true" role="dialog" aria-labelledby="name-modal-title">
+    <div class="modal-content" tabindex="0" style="max-width:400px; margin:10% auto;">
       <h2 id="name-modal-title">Welcome! Please enter your name</h2>
       <input type="text" id="player-name-input" placeholder="Your name here" aria-label="Player Name" autocomplete="off" />
       <button id="name-submit-btn">Start Playing</button>
@@ -26,7 +294,7 @@
   </div>
 
   <!-- Game Selection -->
-  <section id="game-selection" aria-label="Select an agile game to play" style="display: none;">
+  <section id="game-selection" aria-label="Select an agile game to play">
     <h2>Select a game to play</h2>
     <button class="game-choice" data-game="spinWheel">🎡 Spin Wheel Quiz</button>
     <button class="game-choice" data-game="kanbanQuiz">📋 Kanban Board Quiz</button>
@@ -35,18 +303,18 @@
     <button class="game-choice" data-game="valuesQuiz">📖 Agile Values Quiz</button>
   </section>
 
-  <!-- Spin Wheel game area -->
-  <canvas id="wheel" width="500" height="500" role="img" aria-label="Spin wheel with Agile quiz topics" style="display: none;"></canvas>
-  <button id="spin-btn" aria-live="polite" aria-disabled="true" disabled style="display: none;">Spin the Wheel!</button>
-  <button id="play-again-btn" style="display: none;">Play Again</button>
-  <button id="new-player-btn" style="display: none;">New Player</button>
+  <!-- Spin Wheel and Buttons -->
+  <canvas id="wheel" width="500" height="500" role="img" aria-label="Spin wheel with Agile quiz topics"></canvas>
+  <button id="spin-btn" aria-live="polite" aria-disabled="true" disabled>Spin the Wheel!</button>
+  <button id="play-again-btn">Play Again</button>
+  <button id="new-player-btn">New Player</button>
   <div id="result" aria-live="polite" aria-atomic="true"></div>
   <div id="scoreboard" aria-live="polite" aria-atomic="true">Correct Answers: <span id="score">0</span></div>
   <div id="timer" aria-live="polite" aria-atomic="true"></div>
 </main>
 
 <!-- Quiz Modal -->
-<div id="quiz-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="quiz-title" aria-modal="true" style="display: none;">
+<div id="quiz-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="quiz-title" aria-modal="true">
   <div class="modal-content" tabindex="0">
     <div class="progress" id="quiz-progress">Question 1 of 6</div>
     <div id="quiz-question" class="question" id="quiz-title"></div>
@@ -57,7 +325,10 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  // Wrap all JS inside DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- Variables ---
     let playerName = localStorage.getItem('agilePlayerName') || '';
     let score = 0;
     let questionsAsked = new Set();
@@ -71,26 +342,20 @@
     let timeLeft = totalTime;
     let currentGame = null;
 
+    // Cached DOM elements
     const nameModal = document.getElementById('name-modal');
     const nameInput = document.getElementById('player-name-input');
     const nameSubmitBtn = document.getElementById('name-submit-btn');
     const gameSelection = document.getElementById('game-selection');
-
+    const gameButtons = Array.from(document.querySelectorAll('.game-choice'));
     const wheel = document.getElementById('wheel');
     const ctx = wheel.getContext('2d');
-    let startAngle = 0;
-    let spinTimeout = null;
-    let spinAngleStart = 0;
-    let spinTime = 0;
-    let spinTimeTotal = 0;
-
     const spinBtn = document.getElementById('spin-btn');
     const playAgainBtn = document.getElementById('play-again-btn');
     const newPlayerBtn = document.getElementById('new-player-btn');
     const resultDiv = document.getElementById('result');
     const scoreSpan = document.getElementById('score');
     const timerDiv = document.getElementById('timer');
-
     const quizModal = document.getElementById('quiz-modal');
     const quizProgressDiv = document.getElementById('quiz-progress');
     const quizQuestionDiv = document.getElementById('quiz-question');
@@ -98,7 +363,13 @@
     const quizFeedbackDiv = document.getElementById('quiz-feedback');
     const closeQuizBtn = document.getElementById('close-quiz-btn');
 
-    const gameButtons = Array.from(document.querySelectorAll('.game-choice'));
+    // Wheel constants
+    const centerX = wheel.width / 2;
+    const centerY = wheel.height / 2;
+    const radius = 200;
+    const arc = 2 * Math.PI / maxQuestions;
+
+    // Games data (same questions as before, omitted here for brevity, use previous arrays exactly)
 
     const games = {
       spinWheel: {
@@ -158,16 +429,12 @@
       }
     };
 
+    // Variables to hold current questions and segments
     let currentQuestions = [];
     let currentSegments = [];
 
-    const arc = 2 * Math.PI / maxQuestions; // 6 segments
-
+    // === Wheel drawing ===
     function drawWheelSegments() {
-      const centerX = wheel.width / 2;
-      const centerY = wheel.height / 2;
-      const radius = Math.min(centerX, centerY) - 10;
-
       ctx.clearRect(0, 0, wheel.width, wheel.height);
       for(let i = 0; i < currentSegments.length; i++) {
         let angle = startAngle + i * arc;
@@ -184,7 +451,7 @@
         ctx.translate(centerX + Math.cos(angle + arc/2) * radius / 1.5,
                       centerY + Math.sin(angle + arc/2) * radius / 1.5);
         ctx.rotate(angle + arc/2 + Math.PI/2);
-        ctx.fillText(currentSegments[i].name || "Question", -ctx.measureText(currentSegments[i].name).width / 2, 0);
+        ctx.fillText(currentSegments[i].name, -ctx.measureText(currentSegments[i].name).width / 2, 0);
         ctx.restore();
       }
       ctx.beginPath();
@@ -201,6 +468,7 @@
       ctx.fill();
     }
 
+    // === Initialization ===
     function initialize() {
       if(playerName && playerName.length > 0) {
         nameModal.style.display = 'none';
@@ -223,6 +491,33 @@
       }
     }
 
+    // === Timer functions ===
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerDiv.textContent = `Time left: ${timeLeft}s`;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDiv.textContent = `Time left: ${timeLeft}s`;
+        if(timeLeft <= 0) {
+          clearInterval(timerInterval);
+          endGameDueToTimeout();
+        }
+      }, 1000);
+    }
+    function stopTimer() {
+      clearInterval(timerInterval);
+    }
+    function endGameDueToTimeout() {
+      alert(`Time is up! You scored ${score} out of ${maxQuestions}, ${playerName}.`);
+      spinBtn.disabled = true;
+      spinBtn.setAttribute('aria-disabled', 'true');
+      playAgainBtn.style.display = 'inline-block';
+      newPlayerBtn.style.display = 'inline-block';
+      resultDiv.textContent = `Time's up! Final score: ${score} out of ${maxQuestions}, ${playerName}.`;
+      closeQuiz();
+    }
+
+    // === Setup game ===
     function setupGame(gameKey) {
       currentGame = gameKey;
       currentQuestions = games[gameKey].questions.slice(0, maxQuestions);
@@ -244,6 +539,7 @@
       } else {
         wheel.style.display = 'none';
         spinBtn.style.display = 'none';
+        // Immediately start quiz for non-spin games
         currentQuestionIndex = 0;
         questionsAsked.add(0);
         questionsCount = 1;
@@ -262,39 +558,144 @@
       }
     }
 
-    nameSubmitBtn.addEventListener('click', () => {
-      const val = nameInput.value;
-      if(val && val.trim().length > 0) {
-        playerName = val.trim();
-        localStorage.setItem('agilePlayerName', playerName);
-        initialize();
-      } else {
-        alert('Please enter your name to continue.');
-        nameInput.focus();
-      }
-    });
-
-    gameButtons.forEach(btn => btn.addEventListener('click', () => setupGame(btn.getAttribute('data-game'))));
-
-    newPlayerBtn.addEventListener('click', () => {
-      localStorage.removeItem('agilePlayerName');
-      playerName = '';
-      resetGame();
-      nameInput.value = '';
-      initialize();
-      nameInput.focus();
-    });
-
+    // === Spin Wheel logic ===
     spinBtn.addEventListener('click', () => {
-      if(currentGame === 'spinWheel') {
-        spin();
+      if(currentGame === 'spinWheel') spin();
+    });
+    function spin() {
+      if(questionsAsked.size >= maxQuestions) {
+        alert(`You answered all ${maxQuestions} questions! Thanks, ${playerName}.`);
+        spinBtn.disabled = true;
+        spinBtn.setAttribute('aria-disabled', 'true');
+        playAgainBtn.style.display = 'inline-block';
+        newPlayerBtn.style.display = 'inline-block';
+        resultDiv.textContent = `Game over! You scored ${score} out of ${maxQuestions}, ${playerName}.`;
+        closeQuiz();
+        stopTimer();
+        return;
       }
-    });
+      if(questionsAsked.size === 0 && timeLeft === totalTime) {
+        startTimer();
+      }
+      spinBtn.disabled = true;
+      spinBtn.setAttribute('aria-disabled', 'true');
+      playAgainBtn.style.display = 'none';
+      newPlayerBtn.style.display = 'none';
+      resultDiv.textContent = '';
+      spinAngleStart = Math.random() * 10 + 10;
+      spinTime = 0;
+      spinTimeTotal = Math.random() * 3000 + 4000;
+      rotateWheel();
+    }
+    let spinTime = 0;
+    let spinTimeTotal = 0;
+    let spinTimeout = null;
+    function rotateWheel() {
+      spinTime += 30;
+      if(spinTime >= spinTimeTotal) {
+        stopRotateWheel();
+        return;
+      }
+      const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+      startAngle += (spinAngle * Math.PI / 180);
+      drawWheelSegments();
+      spinTimeout = setTimeout(rotateWheel, 30);
+    }
+    function stopRotateWheel() {
+      clearTimeout(spinTimeout);
+      const degrees = startAngle * 180 / Math.PI + 90;
+      const segArc = 360 / currentSegments.length;
+      let index = Math.floor((360 - (degrees % 360)) / segArc);
+      if(index >= currentSegments.length) index = 0;
 
-    playAgainBtn.addEventListener('click', () => {
-      resetGame();
-      resultDiv.textContent = `Ready to play again, ${playerName}?`;
-    });
+      if(questionsAsked.has(index)) {
+        for(let i=0; i<currentSegments.length; i++) {
+          if(!questionsAsked.has(i)) {
+            index = i;
+            break;
+          }
+        }
+        if(questionsAsked.has(index)) {
+          alert(`You answered all ${maxQuestions} questions! Thanks, ${playerName}.`);
+          spinBtn.disabled = true;
+          spinBtn.setAttribute('aria-disabled', 'true');
+          playAgainBtn.style.display = 'inline-block';
+          newPlayerBtn.style.display = 'inline-block';
+          resultDiv.textContent = `Game over! You scored ${score} out of ${maxQuestions}, ${playerName}.`;
+          closeQuiz();
+          stopTimer();
+          return;
+        }
+      }
+
+      questionsAsked.add(index);
+      questionsCount++;
+      currentAttempts = 0;
+      currentQuestionIndex = index;
+      resultDiv.textContent = `${playerName}, you got: ${currentSegments[index].name}!`;
+
+      showQuiz(currentQuestions[index], questionsCount, maxQuestions);
+    }
+
+    function easeOut(t,b,c,d) {
+      t /= d;
+      t--;
+      return c*(t*t*t + 1) + b;
+    }
+
+    // === Quiz modal ===
+    function showQuiz(questionObj, current, total) {
+      quizProgressDiv.textContent = `Question ${current} of ${total}`;
+      quizQuestionDiv.textContent = questionObj.q;
+      quizOptionsDiv.innerHTML = '';
+      quizFeedbackDiv.textContent = '';
+      quizModal.style.display = 'block';
+      quizModal.setAttribute('aria-hidden', 'false');
+      quizModal.querySelector('.modal-content').focus();
+
+      currentAttempts = 0;
+
+      questionObj.options.forEach((option, idx) => {
+        const btn = document.createElement('button');
+        btn.textContent = option;
+        btn.disabled = false;
+        btn.setAttribute('type', 'button');
+        btn.addEventListener('click', () => {
+          currentAttempts++;
+          if(idx === questionObj.answer) {
+            quizFeedbackDiv.style.color = '#7CFC00';
+            quizFeedbackDiv.textContent = 'Correct! 🎉';
+            disableAllOptions();
+            playAgainBtn.style.display = (questionsAsked.size >= maxQuestions) ? 'inline-block' : 'none';
+            newPlayerBtn.style.display = (questionsAsked.size >= maxQuestions) ? 'inline-block' : 'none';
+            incrementScore();
+            if(questionsAsked.size === maxQuestions) {
+              closeQuizBtn.textContent = 'Finish';
+            }
+          } else {
+            quizFeedbackDiv.style.color = '#ff5555';
+            const attemptsLeft = maxAttemptsPerQuestion - currentAttempts;
+            if(attemptsLeft > 0) {
+              quizFeedbackDiv.textContent = `Incorrect, ${attemptsLeft} attempt(s) left.`;
+              btn.disabled = true;
+            } else {
+              quizFeedbackDiv.textContent = `No attempts left. Correct answer was: "${questionObj.options[questionObj.answer]}".`;
+              disableAllOptions();
+              playAgainBtn.style.display = (questionsAsked.size >= maxQuestions) ? 'inline-block' : 'none';
+              newPlayerBtn.style.display = (questionsAsked.size >= maxQuestions) ? 'inline-block' : 'none';
+              if(questionsAsked.size === maxQuestions) {
+                closeQuizBtn.textContent = 'Finish';
+              }
+            }
+          }
+        });
+        quizOptionsDiv.appendChild(btn);
+      });
+    }
+
+    function disableAllOptions() {
+      quizOptionsDiv.querySelectorAll('button').forEach(btn => btn.disabled = true);
+    }
 
     closeQuizBtn.addEventListener('click', () => {
       closeQuiz();
@@ -316,7 +717,92 @@
       }
     });
 
+    function closeQuiz() {
+      quizModal.style.display = 'none';
+      quizModal.setAttribute('aria-hidden', 'true');
+      quizFeedbackDiv.textContent = '';
+    }
+
+    function incrementScore() {
+      score++;
+      scoreSpan.textContent = score;
+    }
+
+    function nextNonSpinQuestion() {
+      if(questionsCount >= maxQuestions) {
+        alert(`You answered all ${maxQuestions} questions! Thanks, ${playerName}.`);
+        spinBtn.disabled = true;
+        spinBtn.setAttribute('aria-disabled', 'true');
+        playAgainBtn.style.display = 'inline-block';
+        newPlayerBtn.style.display = 'inline-block';
+        resultDiv.textContent = `Game over! You scored ${score} out of ${maxQuestions}, ${playerName}.`;
+        closeQuiz();
+        stopTimer();
+        return;
+      }
+      currentQuestionIndex++;
+      questionsCount++;
+      questionsAsked.add(currentQuestionIndex);
+      currentAttempts = 0;
+      showQuiz(currentQuestions[currentQuestionIndex], questionsCount, maxQuestions);
+    }
+
+    // Reset all game state and UI
+    function resetGame() {
+      questionsAsked.clear();
+      questionsCount = 0;
+      score = 0;
+      scoreSpan.textContent = score;
+      resultDiv.textContent = '';
+      playAgainBtn.style.display = 'none';
+      newPlayerBtn.style.display = 'none';
+      spinBtn.disabled = true;
+      spinBtn.setAttribute('aria-disabled', 'true');
+      currentAttempts = 0;
+      currentQuestionIndex = null;
+      stopTimer();
+      timeLeft = totalTime;
+      timerDiv.textContent = '';
+      if(currentGame === 'spinWheel') {
+        drawWheelSegments();
+        wheel.style.display = 'block';
+        spinBtn.style.display = 'inline-block';
+      } else {
+        wheel.style.display = 'none';
+        spinBtn.style.display = 'none';
+      }
+      quizModal.style.display = 'none';
+    }
+
+    // New player button resets user and shows name modal
+    newPlayerBtn.addEventListener('click', () => {
+      localStorage.removeItem('agilePlayerName');
+      playerName = '';
+      resetGame();
+      nameInput.value = '';
+      initialize();
+      nameInput.focus();
+    });
+
+    // Name submit button
+    nameSubmitBtn.addEventListener('click', () => {
+      const val = nameInput.value;
+      if(val && val.trim().length > 0) {
+        playerName = val.trim();
+        localStorage.setItem('agilePlayerName', playerName);
+        initialize();
+      } else {
+        alert('Please enter your name to continue.');
+        nameInput.focus();
+      }
+    });
+
+    // Game selection buttons
+    gameButtons.forEach(btn => btn.addEventListener('click', () => setupGame(btn.getAttribute('data-game'))));
+
+    // Initialize on load
     initialize();
+
   });
 </script>
 
