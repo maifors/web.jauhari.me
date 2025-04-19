@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Agile Spin Wheel Quiz Demo with Name Prompt</title>
+<title>Agile Spin Wheel Quiz - Kahoot Style</title>
 <style>
   /* Reset & base */
   * {
@@ -11,237 +11,257 @@
   }
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f7f9fc;
+    background: #1a1a2e;
     margin: 0;
     padding: 0;
-    color: #333;
+    color: white;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
   }
-  header, footer {
-    background-color: #34495e;
-    color: white;
+  header {
+    background: #16213e;
     padding: 15px 20px;
     text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
   }
   header h1 {
     margin: 0;
     font-weight: 700;
+    font-size: 2rem;
+    color: #e94560;
+    letter-spacing: 1.5px;
   }
   main {
     flex: 1;
     padding: 20px;
-    max-width: 900px;
+    max-width: 700px;
     margin: 0 auto;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
+
+  /* Wheel canvas */
   #wheel {
-    margin: 30px auto 20px;
-    display: block;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
     border-radius: 50%;
-    background: white;
+    box-shadow: 0 0 25px rgba(233, 69, 96, 0.7);
     max-width: 100%;
     height: auto;
+    margin-bottom: 15px;
+    background: white;
   }
-  #spin-btn, #play-again-btn {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    font-size: 18px;
-    border-radius: 8px;
+
+  /* Buttons */
+  button {
+    font-weight: 700;
     cursor: pointer;
-    margin: 15px 10px 10px;
+    border: none;
+    border-radius: 12px;
+    padding: 18px 40px;
+    font-size: 1.2rem;
+    margin: 10px 5px;
     transition: background-color 0.3s ease;
-    min-width: 150px;
+    outline-offset: 2px;
   }
-  #spin-btn:hover:not(:disabled), #play-again-btn:hover {
-    background-color: #2980b9;
+  #spin-btn {
+    background: #e94560;
+    color: white;
+    box-shadow: 0 5px 10px rgba(233, 69, 96, 0.7);
   }
   #spin-btn:disabled {
-    background-color: #95a5a6;
+    background: #6f6f6f;
+    box-shadow: none;
     cursor: not-allowed;
   }
+  #spin-btn:hover:not(:disabled) {
+    background-color: #d43452;
+  }
+  #play-again-btn {
+    background: #0f3460;
+    color: #fff;
+    box-shadow: 0 5px 10px rgba(15, 52, 96, 0.7);
+  }
+  #play-again-btn:hover {
+    background: #0a2148;
+  }
+
+  /* Result text */
   #result {
-    margin-top: 20px;
-    font-size: 24px;
-    font-weight: 600;
-    min-height: 30px;
-    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 15px;
+    min-height: 40px;
+    text-align: center;
+    color: #e94560;
   }
+
+  /* Scoreboard */
   #scoreboard {
-    margin-top: 30px;
-    font-size: 18px;
-    color: #34495e;
+    margin-top: 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f0f0f0;
   }
+
   /* Modal styles */
   .modal {
-    display: none; /* Hidden by default */
+    display: none;
     position: fixed; 
     z-index: 1000; 
     left: 0;
     top: 0;
     width: 100%; 
     height: 100%; 
-    overflow: auto; 
-    background-color: rgba(0,0,0,0.5);
-    animation: fadeIn 0.3s ease forwards;
-  }
-  @keyframes fadeIn {
-    from {opacity: 0;}
-    to {opacity: 1;}
+    overflow: auto;
+    background-color: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(2px);
   }
   .modal-content {
-    background-color: #fff;
-    margin: 8% auto; 
-    padding: 25px 35px;
-    border-radius: 12px;
+    background-color: #0f3460;
+    margin: 6% auto;
+    padding: 30px 40px;
+    border-radius: 20px;
     width: 90%;
     max-width: 520px;
-    box-shadow: 0 0 25px rgba(0,0,0,0.25);
-    text-align: left;
-    position: relative;
+    box-shadow: 0 0 40px rgba(233, 69, 96, 0.85);
+    color: white;
+    display: flex;
+    flex-direction: column;
   }
   .modal-content:focus {
     outline: none;
   }
   .question {
-    font-size: 22px;
-    margin-bottom: 20px;
-    font-weight: 600;
-    color: #2c3e50;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 25px;
+  }
+  .progress {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: #fcd581;
   }
   .options button {
-    display: block;
-    width: 100%;
-    margin: 10px 0;
-    padding: 12px;
-    font-size: 18px;
-    border-radius: 8px;
-    border: 2px solid #3498db;
-    background: white;
+    background: #e94560;
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 8px 0;
+    font-size: 1.15rem;
     cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    font-weight: 700;
+    transition: background-color 0.3s ease;
+    color: white;
+    box-shadow: 0 3px 6px rgba(233,69,96,0.7);
   }
   .options button:hover:not(:disabled) {
-    background-color: #3498db;
-    color: white;
+    background-color: #d43452;
   }
   .options button:disabled {
+    background-color: #6f6f6f;
     cursor: not-allowed;
-    opacity: 0.6;
+    box-shadow: none;
   }
   .feedback {
-    margin-top: 20px;
+    margin-top: 18px;
     font-weight: 700;
-    font-size: 20px;
+    font-size: 1.3rem;
+    height: 36px;
   }
   #close-quiz-btn {
+    align-self: flex-end;
     margin-top: 25px;
+    background: #fcd581;
+    color: #0f3460;
     padding: 12px 25px;
-    font-size: 18px;
+    font-weight: 700;
+    font-size: 1.1rem;
     border: none;
-    background: #27ae60;
-    color: white;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    float: right;
+    box-shadow: 0 3px 6px rgba(252, 213, 129, 0.8);
+    transition: background-color 0.3s ease;
   }
   #close-quiz-btn:hover {
-    background: #1e8449;
+    background: #e6ba4b;
   }
-  /* Leaderboard */
-  #leaderboard {
-    margin-top: 40px;
-    text-align: left;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-    background: #ecf0f1;
-    padding: 15px 20px;
-    border-radius: 10px;
-  }
-  #leaderboard h2 {
-    margin-top: 0;
-    font-weight: 700;
-    color: #34495e;
-  }
-  #leaderboard ol {
-    padding-left: 20px;
-    margin: 0;
-  }
-  #leaderboard li {
-    margin: 8px 0;
-    font-size: 16px;
-    color: #2c3e50;
-  }
-  /* Responsive */
-  @media (max-width: 600px) {
-    #spin-btn, #play-again-btn {
-      width: 90%;
-      font-size: 16px;
-      padding: 12px;
-    }
-    .modal-content {
-      width: 95%;
-      padding: 20px 25px;
-    }
-  }
-  /* Name Modal overrides */
+
+  /* Name modal overrides */
   #name-modal .modal-content {
+    align-items: center;
     text-align: center;
   }
   #name-modal h2 {
-    margin-bottom: 15px;
-    font-size: 24px;
-    color: #34495e;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #fcd581;
   }
-  #name-modal input {
-    font-size: 18px;
+  #player-name-input {
+    width: 100%;
+    max-width: 320px;
+    font-size: 1.2rem;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    margin-bottom: 20px;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
   }
-  #name-modal button {
-    margin-top: 20px;
+  #name-submit-btn {
+    background: #e94560;
+    padding: 15px 40px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border-radius: 12px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(233,69,96,0.7);
+    transition: background-color 0.3s ease;
+  }
+  #name-submit-btn:hover {
+    background-color: #d43452;
+  }
+  /* Responsive */
+  @media (max-width: 600px) {
+    main {
+      max-width: 100%;
+      padding: 15px 10px;
+    }
+    button {
+      width: 100%;
+      font-size: 1.1rem;
+      padding: 16px 0;
+      margin: 8px 0;
+    }
+    #player-name-input {
+      max-width: 100%;
+    }
+    .modal-content {
+      padding: 20px 25px;
+      margin-top: 20%;
+    }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Agile Spin Wheel Quiz Demo</h1>
+  <h1>Agile Spin Wheel Quiz</h1>
 </header>
 
 <main>
   <canvas id="wheel" width="500" height="500" role="img" aria-label="Spin wheel with Agile quiz topics"></canvas>
-  <br />
   <button id="spin-btn" aria-live="polite" aria-disabled="true" disabled>Spin the Wheel!</button>
   <button id="play-again-btn" style="display:none;">Play Again</button>
   <div id="result" aria-live="polite" aria-atomic="true"></div>
-
-  <div id="scoreboard" aria-live="polite" aria-atomic="true">
-    Correct Answers: <span id="score">0</span>
-  </div>
-
-  <section id="leaderboard" aria-label="Leaderboard">
-    <h2>Leaderboard (Simulated)</h2>
-    <ol id="leaderboard-list">
-      <li>Alice - 5</li>
-      <li>Bob - 4</li>
-      <li>You - 0</li>
-      <li>Charlie - 3</li>
-      <li>Diana - 2</li>
-    </ol>
-  </section>
+  <div id="scoreboard" aria-live="polite" aria-atomic="true">Correct Answers: <span id="score">0</span></div>
 </main>
-
-<footer>
-  <small>© 2025 Agile Fun Games Demo | Built with ❤️</small>
-</footer>
 
 <!-- Quiz Modal -->
 <div id="quiz-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="quiz-title" aria-modal="true">
   <div class="modal-content" tabindex="0">
+    <div class="progress" id="quiz-progress">Question 1 of 6</div>
     <div id="quiz-question" class="question" id="quiz-title"></div>
     <div class="options" id="quiz-options"></div>
     <div class="feedback" id="quiz-feedback" aria-live="assertive"></div>
@@ -253,13 +273,13 @@
 <div id="name-modal" class="modal" aria-modal="true" role="dialog" aria-labelledby="name-modal-title" aria-hidden="false" style="display:block;">
   <div class="modal-content" tabindex="0" style="max-width:400px; margin:10% auto;">
     <h2 id="name-modal-title">Welcome! Please enter your name</h2>
-    <input type="text" id="player-name-input" placeholder="Your name here" aria-label="Player Name" style="width:100%; padding:10px; font-size:16px; margin-top:10px; border-radius:5px; border:1px solid #ccc;" />
-    <button id="name-submit-btn" style="margin-top:15px; background:#3498db; color:white; border:none; padding:12px 20px; font-size:16px; border-radius:5px; cursor:pointer;">Start Playing</button>
+    <input type="text" id="player-name-input" placeholder="Your name here" aria-label="Player Name" autocomplete="off" />
+    <button id="name-submit-btn">Start Playing</button>
   </div>
 </div>
 
 <script>
-  // Agile quiz topics and related questions
+  // Agile quiz topics/questions (6 total)
   const segments = [
     { name: 'Scrum Quiz', color: '#FF6384', question: {
       q: 'Who is responsible for maximizing the value of the product in Scrum?',
@@ -273,17 +293,22 @@
     }},
     { name: 'Agile Values', color: '#FFCE56', question: {
       q: 'Which is NOT one of the Agile Manifesto values?',
-      options: ['Individuals and interactions over processes and tools', 'Working software over comprehensive documentation', 'Contract negotiation over customer collaboration', 'Responding to change over following a plan'],
+      options: [
+        'Individuals and interactions over processes and tools',
+        'Working software over comprehensive documentation',
+        'Contract negotiation over customer collaboration',
+        'Responding to change over following a plan'
+      ],
       answer: 2
-    }},
-    { name: 'XP Facts', color: '#4BC0C0', question: {
-      q: 'What does XP stand for in Agile?',
-      options: ['Extreme Programming', 'Extra Planning', 'Extended Process', 'Execution Plan'],
-      answer: 0
     }},
     { name: 'Retrospective Fun', color: '#9966FF', question: {
       q: 'What is the main purpose of a Sprint Retrospective?',
-      options: ['Plan the next sprint', 'Review the product', 'Inspect and adapt the process', 'Assign new tasks'],
+      options: [
+        'Plan the next sprint',
+        'Review the product',
+        'Inspect and adapt the process',
+        'Assign new tasks'
+      ],
       answer: 2
     }},
     { name: 'User Story Puzzle', color: '#FF9F40', question: {
@@ -293,6 +318,16 @@
         'When [event], then [result]',
         'Given [context], when [event], then [outcome]',
         'If [condition], then [action]'
+      ],
+      answer: 0
+    }},
+    { name: 'Agile Planning', color: '#4BC0C0', question: {
+      q: 'What is a common Agile planning artifact?',
+      options: [
+        'Product Backlog',
+        'Gantt Chart',
+        'Critical Path',
+        'Waterfall Model'
       ],
       answer: 0
     }},
@@ -321,16 +356,20 @@
   const quizOptionsDiv = document.getElementById('quiz-options');
   const quizFeedbackDiv = document.getElementById('quiz-feedback');
   const closeQuizBtn = document.getElementById('close-quiz-btn');
+  const quizProgressDiv = document.getElementById('quiz-progress');
 
   const nameModal = document.getElementById('name-modal');
   const nameInput = document.getElementById('player-name-input');
   const nameSubmitBtn = document.getElementById('name-submit-btn');
 
-  // Track user score
+  // Track user score, questions asked
   let score = 0;
   let playerName = localStorage.getItem('agilePlayerName') || '';
+  let questionsAsked = new Set();   // store indexes of questions asked
+  let questionsCount = 0;
+  const maxQuestions = 6;
 
-  // --- Wheel Drawing ---
+  // --- Draw Wheel ---
   function drawWheel() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for(let i = 0; i < numSegments; i++) {
@@ -342,7 +381,6 @@
       ctx.lineTo(centerX, centerY);
       ctx.fill();
 
-      // Draw segment text
       ctx.save();
       ctx.fillStyle = 'white';
       ctx.font = 'bold 16px Arial';
@@ -353,15 +391,14 @@
       ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
       ctx.restore();
     }
-
     // Center circle
     ctx.beginPath();
     ctx.arc(centerX, centerY, 50, 0, 2 * Math.PI);
-    ctx.fillStyle = '#34495e';
+    ctx.fillStyle = '#16213e';
     ctx.fill();
 
     // Arrow pointer
-    ctx.fillStyle = '#e74c3c';
+    ctx.fillStyle = '#e94560';
     ctx.beginPath();
     ctx.moveTo(centerX - 15, centerY - (radius + 10));
     ctx.lineTo(centerX + 15, centerY - (radius + 10));
@@ -370,15 +407,23 @@
     ctx.fill();
   }
 
-  // --- Spin logic ---
+  // --- Spin Logic ---
   function spin() {
+    if(questionsAsked.size >= maxQuestions) {
+      alert(`You have answered all ${maxQuestions} questions! Thanks for playing, ${playerName}.`);
+      spinBtn.disabled = true;
+      spinBtn.setAttribute('aria-disabled', 'true');
+      playAgainBtn.style.display = 'inline-block';
+      resultDiv.textContent = `Game over! You scored ${score} out of ${maxQuestions}, ${playerName}.`;
+      return;
+    }
     spinBtn.disabled = true;
     spinBtn.setAttribute('aria-disabled', 'true');
     playAgainBtn.style.display = 'none';
     resultDiv.textContent = '';
-    spinAngleStart = Math.random() * 10 + 10; // degrees per frame start
+    spinAngleStart = Math.random() * 10 + 10; // degrees/frame start
     spinTime = 0;
-    spinTimeTotal = Math.random() * 3000 + 4000; // spin duration ms
+    spinTimeTotal = Math.random() * 3000 + 4000; // ms
     rotateWheel();
   }
 
@@ -394,18 +439,43 @@
     spinTimeout = setTimeout(rotateWheel, 30);
   }
 
+  // Stop wheel & pick a segment that hasn’t been asked yet
   function stopRotateWheel() {
     clearTimeout(spinTimeout);
     const degrees = startAngle * 180 / Math.PI + 90;
     const arcd = arc * 180 / Math.PI;
     let index = Math.floor((360 - (degrees % 360)) / arcd);
     if(index >= numSegments) index = 0;
+
+    // Pick a question index not asked yet
+    if(questionsAsked.has(index)) {
+      // Question already asked, find next unasked index
+      for(let i=0; i<numSegments; i++) {
+        if(!questionsAsked.has(i)) {
+          index = i;
+          break;
+        }
+      }
+      // If all asked, end game
+      if(questionsAsked.has(index)) {
+        alert(`You have answered all ${maxQuestions} questions! Thanks for playing, ${playerName}.`);
+        spinBtn.disabled = true;
+        spinBtn.setAttribute('aria-disabled', 'true');
+        playAgainBtn.style.display = 'inline-block';
+        resultDiv.textContent = `Game over! Total score: ${score} out of ${maxQuestions}, ${playerName}.`;
+        closeQuiz();
+        return;
+      }
+    }
+
     const selectedSegment = segments[index];
+    questionsAsked.add(index);
+    questionsCount++;
     resultDiv.textContent = `${playerName}, you got: ${selectedSegment.name}!`;
-    showQuiz(selectedSegment.question);
+
+    showQuiz(selectedSegment.question, questionsCount, maxQuestions);
   }
 
-  // Smooth easing function
   function easeOut(t, b, c, d) {
     t /= d;
     t--;
@@ -413,7 +483,8 @@
   }
 
   // --- Quiz Modal ---
-  function showQuiz(questionObj) {
+  function showQuiz(questionObj, current, total) {
+    quizProgressDiv.textContent = `Question ${current} of ${total}`;
     quizQuestionDiv.textContent = questionObj.q;
     quizOptionsDiv.innerHTML = '';
     quizFeedbackDiv.textContent = '';
@@ -427,15 +498,19 @@
       btn.setAttribute('type', 'button');
       btn.addEventListener('click', () => {
         if(idx === questionObj.answer) {
-          quizFeedbackDiv.style.color = '#27ae60';
+          quizFeedbackDiv.style.color = '#7CFC00'; // bright lime green
           quizFeedbackDiv.textContent = 'Correct! 🎉';
           quizOptionsDiv.querySelectorAll('button').forEach(b => b.disabled = true);
-          playAgainBtn.style.display = 'inline-block';
+          playAgainBtn.style.display = (questionsAsked.size >= maxQuestions) ? 'inline-block' : 'none';
           incrementScore();
+          // If last question, change close button text
+          if(questionsAsked.size === maxQuestions) {
+            closeQuizBtn.textContent = 'Finish';
+          }
         } else {
-          quizFeedbackDiv.style.color = '#e74c3c';
+          quizFeedbackDiv.style.color = '#ff5555';
           quizFeedbackDiv.textContent = 'Incorrect, try again!';
-          btn.disabled = true; // disable wrong answer
+          btn.disabled = true;
         }
       });
       quizOptionsDiv.appendChild(btn);
@@ -444,38 +519,28 @@
 
   closeQuizBtn.addEventListener('click', () => {
     closeQuiz();
-    spinBtn.disabled = false;
-    spinBtn.setAttribute('aria-disabled', 'false');
+    if(questionsAsked.size < maxQuestions) {
+      spinBtn.disabled = false;
+      spinBtn.setAttribute('aria-disabled', 'false');
+      spinBtn.focus();
+    } else {
+      resultDiv.textContent = `Game over! You scored ${score} out of ${maxQuestions}, ${playerName}. Thanks for playing!`;
+      spinBtn.disabled = true;
+      spinBtn.setAttribute('aria-disabled', 'true');
+      playAgainBtn.style.display = 'inline-block';
+    }
   });
 
   function closeQuiz() {
     quizModal.style.display = 'none';
     quizModal.setAttribute('aria-hidden', 'true');
+    quizFeedbackDiv.textContent = '';
   }
 
-  // --- Score & Leaderboard ---
+  // --- Score Management ---
   function incrementScore() {
     score++;
     scoreSpan.textContent = score;
-    updateLeaderboard();
-  }
-
-  function updateLeaderboard() {
-    const leaderboardList = document.getElementById('leaderboard-list');
-    const items = leaderboardList.querySelectorAll('li');
-    for(let li of items) {
-      if(li.textContent.startsWith('You')) {
-        li.textContent = `You - ${score}`;
-        break;
-      }
-    }
-    const sorted = Array.from(items).sort((a,b) => {
-      const aScore = parseInt(a.textContent.split(' - ')[1]) || 0;
-      const bScore = parseInt(b.textContent.split(' - ')[1]) || 0;
-      return bScore - aScore;
-    });
-    leaderboardList.innerHTML = '';
-    sorted.forEach(li => leaderboardList.appendChild(li));
   }
 
   // --- Name modal handling ---
@@ -499,10 +564,9 @@
     }
   });
 
-  // Initialize
+  // --- Initialize ---
   drawWheel();
 
-  // Check for saved player name
   if(playerName && playerName.length > 0) {
     resultDiv.textContent = `Welcome back, ${playerName}! Ready to spin the wheel?`;
     nameModal.style.display = 'none';
@@ -515,15 +579,18 @@
     nameInput.focus();
   }
 
-  // Event listeners
+  // Events
   spinBtn.addEventListener('click', spin);
-
   playAgainBtn.addEventListener('click', () => {
-    closeQuiz();
+    // Reset game state
+    questionsAsked.clear();
+    questionsCount = 0;
+    score = 0;
+    scoreSpan.textContent = score;
+    resultDiv.textContent = `Ready to spin again, ${playerName}?`;
+    playAgainBtn.style.display = 'none';
     spinBtn.disabled = false;
     spinBtn.setAttribute('aria-disabled', 'false');
-    playAgainBtn.style.display = 'none';
-    resultDiv.textContent = `${playerName}, ready for another spin?`;
     spinBtn.focus();
   });
 
@@ -531,16 +598,20 @@
   window.addEventListener('click', e => {
     if (e.target === quizModal) {
       closeQuiz();
-      spinBtn.disabled = false;
-      spinBtn.setAttribute('aria-disabled', 'false');
+      if(questionsAsked.size < maxQuestions) {
+        spinBtn.disabled = false;
+        spinBtn.setAttribute('aria-disabled', 'false');
+      }
     }
   });
   
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape' && quizModal.style.display === 'block') {
       closeQuiz();
-      spinBtn.disabled = false;
-      spinBtn.setAttribute('aria-disabled', 'false');
+      if(questionsAsked.size < maxQuestions) {
+        spinBtn.disabled = false;
+        spinBtn.setAttribute('aria-disabled', 'false');
+      }
     }
   });
 </script>
