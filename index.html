@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Agile Game Hub - Choose Your Game</title>
 <style>
-  /* (CSS unchanged - same as earlier, omitted here for brevity) */
-  /* Copy the same CSS from previous code block here */
-  /* Make sure to include all styles given previously */
+  /* Ensure all styles are included here */
+  /* Example: .modal { background-color: #fff; border-radius: 5px; } */
 </style>
 </head>
 <body>
@@ -18,8 +17,8 @@
 
 <main>
   <!-- Name Input Modal -->
-  <div id="name-modal" class="modal" aria-modal="true" role="dialog" aria-labelledby="name-modal-title" aria-hidden="false" style="display:block;">
-    <div class="modal-content" tabindex="0" style="max-width:400px; margin:10% auto;">
+  <div id="name-modal" class="modal" aria-modal="true" role="dialog" aria-labelledby="name-modal-title" aria-hidden="false" style="display: block;">
+    <div class="modal-content" tabindex="0" style="max-width: 400px; margin: 10% auto;">
       <h2 id="name-modal-title">Welcome! Please enter your name</h2>
       <input type="text" id="player-name-input" placeholder="Your name here" aria-label="Player Name" autocomplete="off" />
       <button id="name-submit-btn">Start Playing</button>
@@ -27,7 +26,7 @@
   </div>
 
   <!-- Game Selection -->
-  <section id="game-selection" aria-label="Select an agile game to play" style="display:none;">
+  <section id="game-selection" aria-label="Select an agile game to play" style="display: none;">
     <h2>Select a game to play</h2>
     <button class="game-choice" data-game="spinWheel">🎡 Spin Wheel Quiz</button>
     <button class="game-choice" data-game="kanbanQuiz">📋 Kanban Board Quiz</button>
@@ -37,17 +36,17 @@
   </section>
 
   <!-- Spin Wheel game area -->
-  <canvas id="wheel" width="500" height="500" role="img" aria-label="Spin wheel with Agile quiz topics" style="display:none"></canvas>
-  <button id="spin-btn" aria-live="polite" aria-disabled="true" disabled style="display:none;">Spin the Wheel!</button>
-  <button id="play-again-btn" style="display:none;">Play Again</button>
-  <button id="new-player-btn" style="display:none;">New Player</button>
+  <canvas id="wheel" width="500" height="500" role="img" aria-label="Spin wheel with Agile quiz topics" style="display: none;"></canvas>
+  <button id="spin-btn" aria-live="polite" aria-disabled="true" disabled style="display: none;">Spin the Wheel!</button>
+  <button id="play-again-btn" style="display: none;">Play Again</button>
+  <button id="new-player-btn" style="display: none;">New Player</button>
   <div id="result" aria-live="polite" aria-atomic="true"></div>
   <div id="scoreboard" aria-live="polite" aria-atomic="true">Correct Answers: <span id="score">0</span></div>
   <div id="timer" aria-live="polite" aria-atomic="true"></div>
 </main>
 
 <!-- Quiz Modal -->
-<div id="quiz-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="quiz-title" aria-modal="true" style="display:none;">
+<div id="quiz-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="quiz-title" aria-modal="true" style="display: none;">
   <div class="modal-content" tabindex="0">
     <div class="progress" id="quiz-progress">Question 1 of 6</div>
     <div id="quiz-question" class="question" id="quiz-title"></div>
@@ -58,11 +57,8 @@
 </div>
 
 <script>
-  // Wait for DOM content loaded
   document.addEventListener('DOMContentLoaded', function() {
-
     let playerName = localStorage.getItem('agilePlayerName') || '';
-
     let score = 0;
     let questionsAsked = new Set();
     let questionsCount = 0;
@@ -102,10 +98,8 @@
     const quizFeedbackDiv = document.getElementById('quiz-feedback');
     const closeQuizBtn = document.getElementById('close-quiz-btn');
 
-    // Newly moved inside DOM loaded for safety
     const gameButtons = Array.from(document.querySelectorAll('.game-choice'));
 
-    // Games data (same as before)
     const games = {
       spinWheel: {
         name: "Spin Wheel Quiz",
@@ -170,6 +164,10 @@
     const arc = 2 * Math.PI / maxQuestions; // 6 segments
 
     function drawWheelSegments() {
+      const centerX = wheel.width / 2;
+      const centerY = wheel.height / 2;
+      const radius = Math.min(centerX, centerY) - 10;
+
       ctx.clearRect(0, 0, wheel.width, wheel.height);
       for(let i = 0; i < currentSegments.length; i++) {
         let angle = startAngle + i * arc;
@@ -225,7 +223,6 @@
       }
     }
 
-    // Setup selected game (same logic as before)
     function setupGame(gameKey) {
       currentGame = gameKey;
       currentQuestions = games[gameKey].questions.slice(0, maxQuestions);
@@ -247,7 +244,6 @@
       } else {
         wheel.style.display = 'none';
         spinBtn.style.display = 'none';
-        // Immediately start quiz for non-spin games
         currentQuestionIndex = 0;
         questionsAsked.add(0);
         questionsCount = 1;
@@ -266,7 +262,6 @@
       }
     }
 
-    // Now add event bindings:
     nameSubmitBtn.addEventListener('click', () => {
       const val = nameInput.value;
       if(val && val.trim().length > 0) {
@@ -321,12 +316,7 @@
       }
     });
 
-    // Load state on page start
     initialize();
-
-    // --- All other functions (spin, quiz, timer, drawWheelSegments, etc.) ---
-    // Copy the full JavaScript from previous full code block, unchanged, here
-    // (For brevity, omit here but you must copy them as-is)
   });
 </script>
 
