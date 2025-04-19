@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Agile Spin Wheel Quiz Demo</title>
+<title>Agile Spin Wheel Quiz Demo with Name Prompt</title>
 <style>
   /* Reset & base */
   * {
@@ -189,6 +189,21 @@
       padding: 20px 25px;
     }
   }
+  /* Name Modal overrides */
+  #name-modal .modal-content {
+    text-align: center;
+  }
+  #name-modal h2 {
+    margin-bottom: 15px;
+    font-size: 24px;
+    color: #34495e;
+  }
+  #name-modal input {
+    font-size: 18px;
+  }
+  #name-modal button {
+    margin-top: 20px;
+  }
 </style>
 </head>
 <body>
@@ -200,7 +215,7 @@
 <main>
   <canvas id="wheel" width="500" height="500" role="img" aria-label="Spin wheel with Agile quiz topics"></canvas>
   <br />
-  <button id="spin-btn" aria-live="polite" aria-disabled="false">Spin the Wheel!</button>
+  <button id="spin-btn" aria-live="polite" aria-disabled="true" disabled>Spin the Wheel!</button>
   <button id="play-again-btn" style="display:none;">Play Again</button>
   <div id="result" aria-live="polite" aria-atomic="true"></div>
 
@@ -231,6 +246,15 @@
     <div class="options" id="quiz-options"></div>
     <div class="feedback" id="quiz-feedback" aria-live="assertive"></div>
     <button id="close-quiz-btn" aria-label="Close quiz modal">Close</button>
+  </div>
+</div>
+
+<!-- Name Input Modal -->
+<div id="name-modal" class="modal" aria-modal="true" role="dialog" aria-labelledby="name-modal-title" aria-hidden="false" style="display:block;">
+  <div class="modal-content" tabindex="0" style="max-width:400px; margin:10% auto;">
+    <h2 id="name-modal-title">Welcome! Please enter your name</h2>
+    <input type="text" id="player-name-input" placeholder="Your name here" aria-label="Player Name" style="width:100%; padding:10px; font-size:16px; margin-top:10px; border-radius:5px; border:1px solid #ccc;" />
+    <button id="name-submit-btn" style="margin-top:15px; background:#3498db; color:white; border:none; padding:12px 20px; font-size:16px; border-radius:5px; cursor:pointer;">Start Playing</button>
   </div>
 </div>
 
@@ -298,10 +322,15 @@
   const quizFeedbackDiv = document.getElementById('quiz-feedback');
   const closeQuizBtn = document.getElementById('close-quiz-btn');
 
+  const nameModal = document.getElementById('name-modal');
+  const nameInput = document.getElementById('player-name-input');
+  const nameSubmitBtn = document.getElementById('name-submit-btn');
+
   // Track user score
   let score = 0;
+  let playerName = localStorage.getItem('agilePlayerName') || '';
 
-  // Draw the wheel segments
+  // --- Wheel Drawing ---
   function drawWheel() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for(let i = 0; i < numSegments; i++) {
@@ -325,13 +354,13 @@
       ctx.restore();
     }
 
-    // Draw center circle
+    // Center circle
     ctx.beginPath();
     ctx.arc(centerX, centerY, 50, 0, 2 * Math.PI);
     ctx.fillStyle = '#34495e';
     ctx.fill();
 
-    // Draw arrow pointer
+    // Arrow pointer
     ctx.fillStyle = '#e74c3c';
     ctx.beginPath();
     ctx.moveTo(centerX - 15, centerY - (radius + 10));
@@ -341,7 +370,7 @@
     ctx.fill();
   }
 
-  // Spin logic
+  // --- Spin logic ---
   function spin() {
     spinBtn.disabled = true;
     spinBtn.setAttribute('aria-disabled', 'true');
@@ -349,7 +378,7 @@
     resultDiv.textContent = '';
     spinAngleStart = Math.random() * 10 + 10; // degrees per frame start
     spinTime = 0;
-    spinTimeTotal = Math.random() * 3000 + 4000; // spin duration in ms
+    spinTimeTotal = Math.random() * 3000 + 4000; // spin duration ms
     rotateWheel();
   }
 
@@ -367,28 +396,23 @@
 
   function stopRotateWheel() {
     clearTimeout(spinTimeout);
-    // Calculate winning segment index
     const degrees = startAngle * 180 / Math.PI + 90;
     const arcd = arc * 180 / Math.PI;
     let index = Math.floor((360 - (degrees % 360)) / arcd);
     if(index >= numSegments) index = 0;
     const selectedSegment = segments[index];
-    resultDiv.textContent = `You got: ${selectedSegment.name}!`;
-    // Show quiz modal
+    resultDiv.textContent = `${playerName}, you got: ${selectedSegment.name}!`;
     showQuiz(selectedSegment.question);
   }
 
-  // Easing function for smooth deceleration
+  // Smooth easing function
   function easeOut(t, b, c, d) {
     t /= d;
     t--;
     return c*(t*t*t + 1) + b;
   }
 
-  // Draw initial wheel
-  drawWheel();
-
-  // Quiz modal functions
+  // --- Quiz Modal ---
   function showQuiz(questionObj) {
     quizQuestionDiv.textContent = questionObj.q;
     quizOptionsDiv.innerHTML = '';
@@ -418,19 +442,24 @@
     });
   }
 
+  closeQuizBtn.addEventListener('click', () => {
+    closeQuiz();
+    spinBtn.disabled = false;
+    spinBtn.setAttribute('aria-disabled', 'false');
+  });
+
   function closeQuiz() {
     quizModal.style.display = 'none';
     quizModal.setAttribute('aria-hidden', 'true');
   }
 
-  // Increment user score and update leaderboard simulation
+  // --- Score & Leaderboard ---
   function incrementScore() {
     score++;
     scoreSpan.textContent = score;
     updateLeaderboard();
   }
 
-  // Simulated leaderboard update (replace "You" score)
   function updateLeaderboard() {
     const leaderboardList = document.getElementById('leaderboard-list');
     const items = leaderboardList.querySelectorAll('li');
@@ -440,7 +469,6 @@
         break;
       }
     }
-    // Sort leaderboard (simple numeric sort descending)
     const sorted = Array.from(items).sort((a,b) => {
       const aScore = parseInt(a.textContent.split(' - ')[1]) || 0;
       const bScore = parseInt(b.textContent.split(' - ')[1]) || 0;
@@ -450,31 +478,66 @@
     sorted.forEach(li => leaderboardList.appendChild(li));
   }
 
-  // Event listeners
-  spinBtn.addEventListener('click', spin);
-  closeQuizBtn.addEventListener('click', () => {
-    closeQuiz();
+  // --- Name modal handling ---
+  function enableSpinForName(name) {
+    playerName = name.trim();
+    localStorage.setItem('agilePlayerName', playerName);
+    resultDiv.textContent = `Hello, ${playerName}! Ready to spin the wheel?`;
+    nameModal.style.display = 'none';
     spinBtn.disabled = false;
     spinBtn.setAttribute('aria-disabled', 'false');
+    spinBtn.focus();
+  }
+
+  nameSubmitBtn.addEventListener('click', () => {
+    const nameVal = nameInput.value;
+    if(nameVal && nameVal.trim().length > 0) {
+      enableSpinForName(nameVal);
+    } else {
+      alert('Please enter your name to continue.');
+      nameInput.focus();
+    }
   });
+
+  // Initialize
+  drawWheel();
+
+  // Check for saved player name
+  if(playerName && playerName.length > 0) {
+    resultDiv.textContent = `Welcome back, ${playerName}! Ready to spin the wheel?`;
+    nameModal.style.display = 'none';
+    spinBtn.disabled = false;
+    spinBtn.setAttribute('aria-disabled', 'false');
+  } else {
+    nameModal.style.display = 'block';
+    spinBtn.disabled = true;
+    spinBtn.setAttribute('aria-disabled', 'true');
+    nameInput.focus();
+  }
+
+  // Event listeners
+  spinBtn.addEventListener('click', spin);
+
   playAgainBtn.addEventListener('click', () => {
     closeQuiz();
     spinBtn.disabled = false;
     spinBtn.setAttribute('aria-disabled', 'false');
     playAgainBtn.style.display = 'none';
-    resultDiv.textContent = '';
+    resultDiv.textContent = `${playerName}, ready for another spin?`;
+    spinBtn.focus();
   });
 
-  // Accessibility: close modal on outside click or ESC key
-  window.addEventListener('click', (e) => {
-    if(e.target === quizModal) {
+  // Accessibility: close quiz modal with ESC or outside click
+  window.addEventListener('click', e => {
+    if (e.target === quizModal) {
       closeQuiz();
       spinBtn.disabled = false;
       spinBtn.setAttribute('aria-disabled', 'false');
     }
   });
-  window.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape' && quizModal.style.display === 'block') {
+  
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && quizModal.style.display === 'block') {
       closeQuiz();
       spinBtn.disabled = false;
       spinBtn.setAttribute('aria-disabled', 'false');
