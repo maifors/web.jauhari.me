@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Coach Jo Agile Game Hub (People, Process, Product)</title>
+<style>
+  /* Base styles - Mostly unchanged from v2 */
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a2e; /* Dark blue background */
+    color: white;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: #16213e; /* Slightly lighter blue */
+    padding: 15px 20px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    flex-shrink: 0; /* Prevent header from shrinking */
+  }
+  header h1 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 2rem;
+    color: #e94560; /* Accent pink */
+    letter-spacing: 1.5px;
+  }
+  main {
+    flex: 1; /* Allow main content to grow */
+    max-width: 800px;
+    width: 100%; /* Ensure it takes available width */
+    margin: 20px auto;
+    padding: 0 20px 40px;
+    text-align: center; /* Center buttons and wheel */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content vertically */
+    justify-content: center; /* Center content horizontally */
+  }
+
+  /* --- Views --- */
+  .hidden-view { display: none !important; }
+
+  #game-area {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+  }
+
+  /* --- Modals --- */
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(3px);
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-content {
+    background-color: #0f3460;
+    padding: 30px 40px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 520px;
+    box-shadow: 0 0 40px rgba(233, 69, 96, 0.85);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    position: relative;
+  }
+   .modal-content:focus { outline: none; }
+
+  /* Name Modal Specifics */
+  #name-modal .modal-content {
+    align-items: center;
+    text-align: center;
+    max-width: 400px;
+  }
+  #name-modal h2 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #fcd581;
+  }
+  #player-name-input {
+    width: 100%;
+    max-width: 320px;
+    font-size: 1.2rem;
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    margin-bottom: 20px;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    color: #333;
+    transition: border-color 0.3s ease;
+  }
+   #player-name-input.invalid { border-color: red; }
+   #name-error {
+       color: red;
+       font-size: 0.9rem;
+       height: 1.2em;
+       margin-top: -15px;
+       margin-bottom: 10px;
+   }
+  #name-submit-btn {
+    background: #e94560;
+    padding: 15px 40px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border-radius: 12px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(233,69,96,0.7);
+    transition: background-color 0.3s ease;
+  }
+  #name-submit-btn:hover { background-color: #d43452; }
+
+  /* General Buttons */
+  button {
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 36px;
+    font-size: 1.1rem;
+    margin: 10px 8px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+    outline-offset: 2px;
+    color: white;
+  }
+  button:disabled {
+    background: #6f6f6f !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    color: #ccc !important;
+    opacity: 0.7;
+  }
+
+  /* Specific Buttons */
+   #game-controls button { min-width: 150px; }
+  #spin-btn {
+    background: #e94560;
+    box-shadow: 0 5px 10px rgba(233, 69, 96, 0.7);
+  }
+  #spin-btn:hover:not(:disabled) { background-color: #d43452; }
+  #play-again-btn {
+    background: #0f3460;
+    color: #fff;
+    box-shadow: 0 5px 10px rgba(15, 52, 96, 0.7);
+  }
+  #play-again-btn:hover:not(:disabled) { background: #0a2148; }
+  #new-player-btn {
+    background: #fcd581;
+    color: #0f3460;
+    box-shadow: 0 5px 10px rgba(252, 213, 129, 0.8);
+  }
+  #new-player-btn:hover:not(:disabled) { background: #e6ba4b; }
+
+  /* Wheel canvas */
+  #wheel-container {
+      position: relative;
+      width: 350px;
+      height: 350px;
+      margin: 15px auto 25px;
+  }
+  #wheel {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%; /* Make wheel visually round */
+  }
+  #wheel-pointer {
+      position: absolute;
+      left: 50%;
+      top: -10px;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 30px solid #e94560; /* Pink pointer */
+      z-index: 10;
+  }
+
+  /* Text outputs */
+   #game-info { margin-top: 15px; width: 100%; }
+  #result {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 15px;
+    min-height: 40px;
+    text-align: center;
+    color: #e94560;
+  }
+  #scoreboard, #timer {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #f0f0f0;
+    text-align: center;
+    min-height: 1.5em;
+  }
+  #timer {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fcd581;
+    margin-bottom: 15px;
+  }
+
+  /* Quiz Modal */
+  #quiz-modal .modal-content { max-width: 600px; }
+  .question {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 25px;
+  }
+  .progress {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: #fcd581;
+    text-align: right;
+  }
+  .options button {
+    background: #e94560;
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 8px 0;
+    font-size: 1.15rem;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    color: white;
+    box-shadow: 0 3px 6px rgba(233,69,96,0.7);
+    display: block;
+    width: 100%;
+    text-align: left;
+    opacity: 1;
+  }
+  .options button:hover:not(:disabled) { background-color: #d43452; }
+   .options button:disabled { opacity: 0.6; }
+  .options button.correct {
+      background-color: #28a745 !important;
+      color: white !important;
+      box-shadow: none;
+      opacity: 1 !important;
+  }
+  .options button.incorrect {
+      background-color: #dc3545 !important;
+      color: white !important;
+      box-shadow: none;
+      opacity: 0.7 !important;
+  }
+  .feedback {
+    margin-top: 18px;
+    font-weight: 700;
+    font-size: 1.3rem;
+    min-height: 36px;
+    text-align: center;
+  }
+  #close-quiz-btn {
+    align-self: flex-end;
+    margin-top: 25px;
+    background: #fcd581;
+    color: #0f3460;
+    padding: 12px 25px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(252, 213, 129, 0.8);
+    transition: background-color 0.3s ease;
+  }
+  #close-quiz-btn:hover:not(:disabled) { background: #e6ba4b; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    main {
+      padding: 0 10px 20px;
+      justify-content: flex-start;
+      margin-top: 10px;
+    }
+    button { /* Simplified selector */
+      width: 95%;
+      font-size: 1.1rem;
+      padding: 16px 0;
+      margin: 10px auto;
+      display: block;
+      box-sizing: border-box;
+    }
+     #game-controls button { min-width: unset; }
+    #player-name-input { max-width: 95%; }
+    .modal { align-items: flex-start; padding-top: 15%; }
+    .modal-content { padding: 20px 25px; width: 95%; }
+    #wheel-container {
+        width: 90%;
+        max-width: 300px;
+        height: auto;
+        padding-top: 0;
+        aspect-ratio: 1 / 1;
+    }
+    #wheel-pointer {
+        top: -5px;
+        border-left-width: 10px;
+        border-right-width: 10px;
+        border-top-width: 20px;
+    }
+    header h1 { font-size: 1.8rem; }
+    .question { font-size: 1.4rem; }
+    .options button { font-size: 1rem; }
+    .feedback { font-size: 1.1rem; }
+    #wheel { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Agile Game Hub</h1>
+</header>
+
+<main>
+  <div id="name-modal" class="modal" aria-modal="true" role="dialog" aria-labelledby="name-modal-title">
+    <div class="modal-content" tabindex="-1">
+      <h2 id="name-modal-title">Welcome! Please enter your name</h2>
+      <input type="text" id="player-name-input" placeholder="Your name here" aria-label="Player Name" autocomplete="off" />
+       <div id="name-error"></div>
+      <button id="name-submit-btn">Start Playing</button>
+    </div>
+  </div>
+
+  <div id="game-area" class="hidden-view">
+      <div id="spin-wheel-view">
+          <div id="wheel-container">
+               <canvas id="wheel" width="500" height="500" role="img" aria-label="Spin wheel with Agile categories: People, Process, Product"></canvas>
+               <div id="wheel-pointer"></div>
+           </div>
+      </div>
+
+      <div id="game-info">
+           <div id="timer" aria-live="polite" aria-atomic="true"></div>
+           <div id="scoreboard" aria-live="polite" aria-atomic="true">Correct Answers: <span id="score">0</span> / <span id="total-questions">6</span></div>
+           <div id="result" aria-live="polite" aria-atomic="true"></div>
+       </div>
+
+      <div id="game-controls">
+          <button id="spin-btn" aria-live="polite">Spin for Category!</button>
+          <button id="play-again-btn">Play Again</button>
+          <button id="new-player-btn">New Player</button>
+      </div>
+  </div>
+
+</main>
+
+<div id="quiz-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="quiz-title" aria-modal="true">
+  <div class="modal-content" tabindex="-1">
+    <div class="progress" id="quiz-progress">Question 1 of 6</div>
+    <div id="quiz-question" class="question" aria-live="polite"></div>
+    <div class="options" id="quiz-options" role="group" aria-label="Answer options">
+        </div>
+    <div class="feedback" id="quiz-feedback" aria-live="assertive"></div>
+    <button id="close-quiz-btn" aria-label="Close quiz modal">Close</button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+
+    // --- Constants ---
+    const QUESTIONS_PER_GAME = 6;
+    const MAX_ATTEMPTS_PER_QUESTION = 2;
+    const TOTAL_TIME = 60; // seconds
+    const CATEGORIES = ['People', 'Process', 'Product'];
+    const CATEGORY_COLORS = ['#36A2EB', '#FFCE56', '#FF6384']; // Blue, Yellow, Pink
+    const UI_VIEWS = {
+        NAME_ENTRY: 'nameEntry',
+        GAME_AREA: 'gameArea'
+    };
+
+    // --- State ---
+    const gameState = {
+        playerName: localStorage.getItem('agilePlayerName') || '',
+        score: 0,
+        questionsAsked: new Set(),
+        questionsCount: 0,
+        currentAttempts: 0,
+        currentQuestion: null,
+        currentView: UI_VIEWS.NAME_ENTRY,
+        isGameOver: false,
+        timerInterval: null,
+        timeLeft: TOTAL_TIME,
+        isSpinning: false,
+        spinTimeout: null,
+        wheelStartAngle: 0,
+        wheelCenterX: 0,
+        wheelCenterY: 0,
+        wheelRadius: 0,
+        allQuestions: []
+    };
+
+    // --- DOM Elements ---
+    const elements = {
+        nameModal: document.getElementById('name-modal'),
+        nameInput: document.getElementById('player-name-input'),
+        nameError: document.getElementById('name-error'),
+        nameSubmitBtn: document.getElementById('name-submit-btn'),
+        gameArea: document.getElementById('game-area'),
+        spinWheelView: document.getElementById('spin-wheel-view'),
+        wheelContainer: document.getElementById('wheel-container'),
+        wheelCanvas: document.getElementById('wheel'),
+        wheelCtx: document.getElementById('wheel').getContext('2d'),
+        gameInfoView: document.getElementById('game-info'),
+        timerDisplay: document.getElementById('timer'),
+        scoreDisplay: document.getElementById('score'),
+        totalQuestionsDisplay: document.getElementById('total-questions'), // Added
+        resultDisplay: document.getElementById('result'),
+        gameControlsView: document.getElementById('game-controls'),
+        spinBtn: document.getElementById('spin-btn'),
+        playAgainBtn: document.getElementById('play-again-btn'),
+        newPlayerBtn: document.getElementById('new-player-btn'),
+        quizModal: document.getElementById('quiz-modal'),
+        quizProgress: document.getElementById('quiz-progress'),
+        quizQuestion: document.getElementById('quiz-question'),
+        quizOptions: document.getElementById('quiz-options'),
+        quizFeedback: document.getElementById('quiz-feedback'),
+        quizCloseBtn: document.getElementById('close-quiz-btn'),
+    };
+
+    // --- Game Data ---
+    const questionsData = {
+        People: [
+            { category: 'People', q: 'What is the ideal size for a Scrum Development Team?', options: ['3-9 members', '10-15 members', '2 members', 'No limit'], answer: 0 },
+            { category: 'People', q: 'Who facilitates Scrum events as requested or needed?', options: ['Project Manager', 'Scrum Master', 'Product Owner', 'Team Lead'], answer: 1 },
+            { category: 'People', q: 'What is a key characteristic of a self-organizing team?', options: ['Manager assigns all tasks', 'Team chooses how best to accomplish work', 'Follows a strict hierarchy', 'Requires constant supervision'], answer: 1 },
+            { category: 'People', q: 'What Scrum value is crucial for team members to work together effectively?', options: ['Courage', 'Focus', 'Commitment', 'Respect'], answer: 3 },
+            { category: 'People', q: 'Who is responsible for managing the Product Backlog?', options: ['Development Team', 'Scrum Master', 'Product Owner', 'Stakeholders'], answer: 2 },
+            { category: 'People', q: 'What does "T-shaped skills" mean for team members?', options: ['Deep expertise in one area, broad in others', 'Expertise in testing only', 'Expertise in technical skills only', 'Broad knowledge, no deep expertise'], answer: 0 },
+            { category: 'People', q: 'What is the role of stakeholders in Scrum?', options: ['Manage the team daily', 'Provide feedback and requirements', 'Write code', 'Facilitate retrospectives'], answer: 1 },
+            { category: 'People', q: 'Which Agile principle emphasizes motivated individuals?', options: ['Simplicity is essential', 'Welcome changing requirements', 'Build projects around motivated individuals', 'Deliver working software frequently'], answer: 2 },
+            { category: 'People', q: 'What is psychological safety in a team context?', options: ['Feeling safe to take risks and be vulnerable', 'Having physical security', 'Knowing all the technical answers', 'Avoiding conflict'], answer: 0 },
+            { category: 'People', q: 'Who resolves impediments for the Development Team?', options: ['Product Owner', 'Scrum Master', 'The Team itself', 'Project Manager'], answer: 1 }
+        ],
+        Process: [
+            { category: 'Process', q: 'What is the purpose of the Daily Scrum?', options: ['Plan the day and inspect progress', 'Solve technical problems', 'Report status to managers', 'Review completed work'], answer: 0 },
+            { category: 'Process', q: 'What is the timebox for a Sprint Review (for a one-month sprint)?', options: ['1 hour', '2 hours', '4 hours', '8 hours'], answer: 2 },
+            { category: 'Process', q: 'What happens during the Sprint Retrospective?', options: ['Demo the product increment', 'Plan the next Sprint', 'Inspect and adapt the process', 'Refine the backlog'], answer: 2 },
+            { category: 'Process', q: 'What does "Limit WIP" mean in Kanban?', options: ['Finish work quickly', 'Restrict the amount of work in progress at each step', 'Plan work carefully', 'Avoid difficult tasks'], answer: 1 },
+            { category: 'Process', q: 'Which Agile methodology focuses heavily on visualizing workflow?', options: ['Scrum', 'Kanban', 'XP (Extreme Programming)', 'Crystal'], answer: 1 },
+            { category: 'Process', q: 'What is the definition of "Done"?', options: ['Code is written', 'Shared understanding of quality for the Increment', 'Passed QA testing', 'Deployed to production'], answer: 1 },
+            { category: 'Process', q: 'What is Sprint Planning?', options: ['A daily sync-up', 'A review of the last Sprint', 'An event to plan the work for the current Sprint', 'A backlog refinement session'], answer: 2 },
+            { category: 'Process', q: 'Which Agile principle supports sustainable development?', options: ['Working software is the primary measure', 'Simplicity is essential', 'Agile processes promote sustainable development', 'Welcome changing requirements'], answer: 2 },
+            { category: 'Process', q: 'What is "Flow" in the context of Agile/Kanban?', options: ['The movement of work through the system', 'The team\'s mood', 'The number of meetings', 'The project budget'], answer: 0 },
+            { category: 'Process', q: 'What is the input to Sprint Planning?', options: ['Sprint Goal', 'Product Backlog', 'Latest Increment', 'All of the above'], answer: 3 }
+        ],
+        Product: [
+            { category: 'Product', q: 'What is the Product Backlog?', options: ['A list of tasks for the current Sprint', 'An ordered list of everything needed for the product', 'The plan for the next release', 'A list of bugs'], answer: 1 },
+            { category: 'Product', q: 'Who has the final say on the order of the Product Backlog?', options: ['Development Team', 'Scrum Master', 'Product Owner', 'CEO'], answer: 2 },
+            { category: 'Product', q: 'What is a Product Increment?', options: ['The Sprint Backlog', 'The sum of all completed Backlog items in a Sprint + previous Increments', 'A single user story', 'The project plan'], answer: 1 },
+            { category: 'Product', q: 'What does MVP stand for?', options: ['Most Valuable Person', 'Minimum Viable Product', 'Maximum Value Proposition', 'Major Validated Prototype'], answer: 1 },
+            { category: 'Product', q: 'What is the purpose of a User Story?', options: ['Describe a feature from an end-user perspective', 'Provide detailed technical specs', 'Assign tasks to developers', 'Track project budget'], answer: 0 },
+            { category: 'Product', q: 'What does INVEST stand for in relation to user stories?', options: ['Independent, Negotiable, Valuable, Estimable, Small, Testable', 'Important, Needed, Valid, Easy, Short, Trackable', 'Innovative, Neat, Valuable, Exciting, Simple, Tested', 'Internal, Negotiated, Verified, Estimated, Sized, Timely'], answer: 0 },
+            { category: 'Product', q: 'What is Backlog Refinement (Grooming)?', options: ['Planning the Sprint', 'Adding detail, estimates, and order to Backlog items', 'Reviewing the completed Increment', 'The daily stand-up meeting'], answer: 1 },
+            { category: 'Product', q: 'What is a Sprint Goal?', options: ['The list of tasks for the Sprint', 'An objective set for the Sprint', 'The Product Owner\'s vision', 'The definition of Done'], answer: 1 },
+            { category: 'Product', q: 'How is value typically measured in Agile product development?', options: ['Lines of code written', 'Features delivered', 'Working software meeting user needs', 'Hours worked'], answer: 2 },
+            { category: 'Product', q: 'What is Technical Debt?', options: ['Money owed for software licenses', 'The implied cost of rework caused by choosing an easy solution now', 'Bugs found during testing', 'The project budget deficit'], answer: 1 }
+        ]
+    };
+
+    // --- Initialization ---
+    function initializeApp() {
+        console.log("Initializing App...");
+        gameState.allQuestions = [ ...questionsData.People, ...questionsData.Process, ...questionsData.Product ];
+        gameState.wheelCenterX = elements.wheelCanvas.width / 2;
+        gameState.wheelCenterY = elements.wheelCanvas.height / 2;
+        gameState.wheelRadius = Math.min(elements.wheelCanvas.width, elements.wheelCanvas.height) / 2 * 0.9;
+        attachEventListeners();
+        if (gameState.playerName) {
+            setupGame();
+        } else {
+            switchView(UI_VIEWS.NAME_ENTRY);
+        }
+        console.log("App Initialized.");
+    }
+
+    // --- UI Update & View Switching ---
+    function switchView(view) {
+        gameState.currentView = view;
+        console.log("Switching View to:", view);
+        elements.nameModal.style.display = 'none';
+        elements.gameArea.classList.add('hidden-view');
+        elements.quizModal.style.display = 'none';
+        switch (view) {
+            case UI_VIEWS.NAME_ENTRY:
+                elements.nameModal.style.display = 'flex';
+                elements.nameInput.focus();
+                break;
+            case UI_VIEWS.GAME_AREA:
+                elements.gameArea.classList.remove('hidden-view');
+                updateGameUI();
+                break;
+        }
+    }
+
+    function updateGameUI() {
+        // Check if elements exist before updating
+        if (elements.scoreDisplay) {
+            elements.scoreDisplay.textContent = gameState.score;
+        }
+        // Check parent exists before modifying its content structure
+        if (elements.scoreDisplay?.parentElement && elements.totalQuestionsDisplay) {
+             // Update total questions span specifically
+             elements.totalQuestionsDisplay.textContent = QUESTIONS_PER_GAME;
+        } else if (elements.scoreDisplay?.parentElement) {
+             // Fallback if total-questions span is missing (shouldn't happen now)
+             // Avoid overwriting the score span itself
+             console.warn("Scoreboard structure might be incorrect. Updating cautiously.");
+        }
+
+        if (elements.timerDisplay) {
+            elements.timerDisplay.textContent = gameState.timeLeft >= 0 ? `Time left: ${gameState.timeLeft}s` : "Time's up!";
+        }
+
+        // Update Button States only if buttons exist
+        if(elements.spinBtn && elements.playAgainBtn && elements.newPlayerBtn) {
+            elements.spinBtn.disabled = gameState.isGameOver || gameState.isSpinning || gameState.questionsCount >= QUESTIONS_PER_GAME;
+            elements.playAgainBtn.style.display = gameState.isGameOver ? 'inline-block' : 'none';
+            elements.newPlayerBtn.style.display = gameState.isGameOver ? 'inline-block' : 'none';
+        }
+    }
+
+    // --- Event Listeners ---
+    function attachEventListeners() {
+        // Add checks to ensure elements exist before adding listeners
+        if (elements.nameSubmitBtn) elements.nameSubmitBtn.addEventListener('click', handleNameSubmit);
+        if (elements.nameInput) elements.nameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleNameSubmit(); });
+        if (elements.spinBtn) elements.spinBtn.addEventListener('click', handleSpin);
+        if (elements.playAgainBtn) elements.playAgainBtn.addEventListener('click', handlePlayAgain);
+        if (elements.newPlayerBtn) elements.newPlayerBtn.addEventListener('click', handleNewPlayer);
+        if (elements.quizCloseBtn) elements.quizCloseBtn.addEventListener('click', handleQuizClose);
+    }
+
+    // --- Event Handlers ---
+    function handleNameSubmit() {
+        const nameVal = elements.nameInput.value.trim();
+        elements.nameInput.classList.remove('invalid');
+        elements.nameError.textContent = '';
+        if (nameVal.length > 0) {
+            gameState.playerName = nameVal;
+            localStorage.setItem('agilePlayerName', gameState.playerName);
+            setupGame();
+        } else {
+            elements.nameInput.classList.add('invalid');
+            elements.nameError.textContent = 'Please enter your name.';
+            elements.nameInput.focus();
+        }
+    }
+
+    function handleSpin() {
+        if (gameState.isSpinning || gameState.isGameOver) return;
+        spinWheel();
+    }
+
+    function handlePlayAgain() {
+        setupGame();
+    }
+
+    function handleNewPlayer() {
+        resetApp();
+    }
+
+    function handleQuizAnswer(event) {
+        const selectedButton = event.target;
+        const selectedIndex = parseInt(selectedButton.dataset.index, 10);
+        if (isNaN(selectedIndex) || !gameState.currentQuestion) { console.error("Quiz Error: Invalid state"); return; }
+
+        const question = gameState.currentQuestion;
+        const correctAnswerIndex = question.answer;
+        gameState.currentAttempts++;
+        disableQuizOptions(true);
+
+        if (selectedIndex === correctAnswerIndex) {
+            elements.quizFeedback.style.color = '#7CFC00';
+            elements.quizFeedback.textContent = 'Correct! 🎉';
+            selectedButton.classList.add('correct');
+            gameState.score++;
+            updateGameUI();
+            finalizeQuizAnswer();
+        } else {
+            selectedButton.classList.add('incorrect');
+            elements.quizFeedback.style.color = '#ff5555';
+            const attemptsLeft = MAX_ATTEMPTS_PER_QUESTION - gameState.currentAttempts;
+            if (attemptsLeft > 0) {
+                elements.quizFeedback.textContent = `Incorrect. ${attemptsLeft} attempt(s) left. Try again!`;
+                setTimeout(() => {
+                    elements.quizOptions.querySelectorAll('button').forEach(btn => {
+                        if (btn !== selectedButton) { btn.disabled = false; btn.style.opacity = '1'; }
+                        else { btn.style.opacity = '0.6'; }
+                    });
+                }, 700);
+            } else {
+                elements.quizFeedback.textContent = `Incorrect. The correct answer was: "${question.options[correctAnswerIndex]}"`;
+                const correctButton = elements.quizOptions.querySelector(`button[data-index="${correctAnswerIndex}"]`);
+                if (correctButton) correctButton.classList.add('correct');
+                finalizeQuizAnswer();
+            }
+        }
+    }
+
+     function finalizeQuizAnswer() {
+        disableQuizOptions(false);
+        elements.quizCloseBtn.disabled = false;
+        if (gameState.questionsCount >= QUESTIONS_PER_GAME) {
+            elements.quizCloseBtn.textContent = 'Finish Game';
+        }
+     }
+
+    function handleQuizClose() {
+        closeQuizModal();
+        if (gameState.timeLeft <= 0 || gameState.questionsCount >= QUESTIONS_PER_GAME) {
+            endGame(gameState.timeLeft <= 0);
+        } else {
+            updateGameUI(); // Re-enable spin button if applicable
+        }
+    }
+
+    // --- Game Logic Functions ---
+    function setupGame() {
+        resetGameState();
+        gameState.isGameOver = false;
+        drawWheel();
+        switchView(UI_VIEWS.GAME_AREA);
+        elements.resultDisplay.textContent = `Welcome, ${gameState.playerName}! Spin the wheel to get a question category.`;
+        setTimeout(() => { if (elements.resultDisplay) elements.resultDisplay.textContent = ''; }, 2500);
+    }
+
+    function startTimer() {
+        stopTimer();
+        gameState.timeLeft = TOTAL_TIME;
+        gameState.timerInterval = setInterval(() => {
+            gameState.timeLeft--;
+            updateGameUI();
+            if (gameState.timeLeft <= 0) { endGame(true); }
+        }, 1000);
+        updateGameUI();
+    }
+
+    function stopTimer() {
+        clearInterval(gameState.timerInterval);
+        gameState.timerInterval = null;
+    }
+
+    function spinWheel() {
+        if (gameState.isSpinning || gameState.isGameOver || gameState.questionsCount >= QUESTIONS_PER_GAME) { return; }
+        gameState.isSpinning = true;
+        updateGameUI();
+        elements.resultDisplay.textContent = 'Spinning...';
+        if (gameState.questionsCount === 0 && gameState.timeLeft === TOTAL_TIME) { startTimer(); }
+
+        const spinAngleVelocity = Math.random() * 10 + 15;
+        const spinTimeTotal = Math.random() * 2000 + 4000;
+        let spinTimeElapsed = 0;
+        const frameDuration = 30;
+
+        function rotateWheelFrame() {
+            spinTimeElapsed += frameDuration;
+            if (spinTimeElapsed >= spinTimeTotal) { stopSpinningAnimation(); return; }
+            const timeFractionRemaining = 1 - (spinTimeElapsed / spinTimeTotal);
+            const easedFraction = timeFractionRemaining * (2 - timeFractionRemaining);
+            const currentAngleVelocity = spinAngleVelocity * easedFraction;
+            gameState.wheelStartAngle = (gameState.wheelStartAngle + (currentAngleVelocity * Math.PI / 180)) % (2 * Math.PI);
+            drawWheel();
+            gameState.spinTimeout = setTimeout(rotateWheelFrame, frameDuration);
+        }
+        rotateWheelFrame();
+    }
+
+    function stopSpinningAnimation() {
+        clearTimeout(gameState.spinTimeout);
+        gameState.spinTimeout = null;
+
+        const numSegments = CATEGORIES.length;
+        const arcSize = 2 * Math.PI / numSegments;
+        const pointerAngle = 3 * Math.PI / 2;
+        const effectiveAngle = (2 * Math.PI - gameState.wheelStartAngle + pointerAngle) % (2 * Math.PI);
+        let landedIndex = Math.floor(effectiveAngle / arcSize);
+        landedIndex = (landedIndex + numSegments) % numSegments;
+        const landedCategory = CATEGORIES[landedIndex];
+
+        console.log(`Landed on category: ${landedCategory}`);
+        elements.resultDisplay.textContent = `Landed on: ${landedCategory}!`;
+
+        const questionToAsk = selectUnaskedQuestion(landedCategory);
+
+        if (questionToAsk) {
+            gameState.currentQuestion = questionToAsk;
+            gameState.questionsAsked.add(questionToAsk.q); // Use question text as unique ID
+            gameState.questionsCount++;
+            gameState.currentAttempts = 0;
+            setTimeout(() => { showQuizModal(questionToAsk, gameState.questionsCount, QUESTIONS_PER_GAME); }, 700);
+        } else {
+            console.log("No unasked questions remaining.");
+            elements.resultDisplay.textContent = "No more questions available!";
+            gameState.isSpinning = false;
+            endGame(false);
+        }
+    }
+
+    function selectUnaskedQuestion(preferredCategory) {
+        let availableInCategory = gameState.allQuestions.filter(q => q.category === preferredCategory && !gameState.questionsAsked.has(q.q));
+        if (availableInCategory.length > 0) {
+            const randomIndex = Math.floor(Math.random() * availableInCategory.length);
+            console.log(`Selected question from ${preferredCategory}`);
+            return availableInCategory[randomIndex];
+        } else {
+            console.log(`${preferredCategory} exhausted, selecting from any category.`);
+            let availableOverall = gameState.allQuestions.filter(q => !gameState.questionsAsked.has(q.q));
+            if (availableOverall.length > 0) {
+                const randomIndex = Math.floor(Math.random() * availableOverall.length);
+                console.log(`Selected question from ${availableOverall[randomIndex].category}`);
+                return availableOverall[randomIndex];
+            } else {
+                return null; // No questions left
+            }
+        }
+    }
+
+    function endGame(isTimeout) {
+        console.log("Ending Game. Timeout:", isTimeout);
+        stopTimer();
+        gameState.isGameOver = true;
+        gameState.isSpinning = false;
+        clearTimeout(gameState.spinTimeout);
+        const questionsAttempted = gameState.questionsCount;
+        let endMessage = isTimeout ?
+            `Time's up! Final score: ${gameState.score} out of ${questionsAttempted} questions attempted.` :
+            `Game Over! You answered ${QUESTIONS_PER_GAME} questions and scored ${gameState.score}.`;
+        elements.resultDisplay.textContent = `${endMessage} Well done, ${gameState.playerName}!`;
+        switchView(UI_VIEWS.GAME_AREA); // Update UI to show end buttons
+    }
+
+    // --- Reset Functions ---
+    function resetGameState() {
+        gameState.score = 0;
+        gameState.questionsAsked.clear();
+        gameState.questionsCount = 0;
+        gameState.currentAttempts = 0;
+        gameState.currentQuestion = null;
+        gameState.isGameOver = false;
+        stopTimer();
+        gameState.timeLeft = TOTAL_TIME;
+        gameState.isSpinning = false;
+        clearTimeout(gameState.spinTimeout);
+        gameState.wheelStartAngle = 0;
+    }
+
+    function resetApp() {
+        console.log("Resetting App...");
+        resetGameState();
+        gameState.playerName = '';
+        localStorage.removeItem('agilePlayerName');
+        if (elements.nameInput) elements.nameInput.value = ''; // Check element exists
+        switchView(UI_VIEWS.NAME_ENTRY);
+    }
+
+    // --- Wheel Drawing ---
+    function drawWheel() {
+        const ctx = elements.wheelCtx;
+        const numSegments = CATEGORIES.length;
+        if (!ctx) return;
+        const { wheelCenterX: cx, wheelCenterY: cy, wheelRadius: r, wheelStartAngle: angle } = gameState;
+        const arc = 2 * Math.PI / numSegments;
+        const textR = r * 0.55;
+        const fontSize = Math.max(14, Math.min(20, Math.floor(r / 8)));
+        ctx.font = `bold ${fontSize}px Segoe UI, Arial`;
+        ctx.clearRect(0, 0, elements.wheelCanvas.width, elements.wheelCanvas.height);
+
+        for (let i = 0; i < numSegments; i++) {
+            const segAngle = angle + i * arc;
+            ctx.fillStyle = CATEGORY_COLORS[i % numSegments];
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, segAngle, segAngle + arc); ctx.lineTo(cx, cy); ctx.fill();
+            ctx.save(); ctx.strokeStyle = '#FFF'; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+            ctx.save(); ctx.fillStyle = 'white';
+            ctx.translate(cx + Math.cos(segAngle + arc / 2) * textR, cy + Math.sin(segAngle + arc / 2) * textR);
+            ctx.rotate(segAngle + arc / 2 + Math.PI / 2);
+            const text = CATEGORIES[i]; ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
+            ctx.restore();
+        }
+        ctx.beginPath(); ctx.arc(cx, cy, r * 0.15, 0, 2 * Math.PI); ctx.fillStyle = '#16213e'; ctx.fill();
+        ctx.strokeStyle = '#fcd581'; ctx.lineWidth = 3; ctx.stroke();
+    }
+
+    // --- Quiz Modal Functions ---
+    function showQuizModal(questionObj, currentNum, totalNum) {
+        if (!questionObj) { console.error("showQuizModal: null questionObj"); return; }
+        gameState.currentAttempts = 0;
+        elements.quizProgress.textContent = `Question ${currentNum} of ${totalNum}`;
+        elements.quizQuestion.textContent = questionObj.q;
+        elements.quizOptions.innerHTML = '';
+        elements.quizFeedback.textContent = '';
+        elements.quizCloseBtn.textContent = 'Close'; elements.quizCloseBtn.disabled = true;
+
+        questionObj.options.forEach((opt, idx) => {
+            const btn = document.createElement('button'); btn.textContent = opt; btn.disabled = false;
+            btn.type = 'button'; btn.dataset.index = idx;
+            btn.addEventListener('click', handleQuizAnswer);
+            elements.quizOptions.appendChild(btn);
+        });
+        elements.quizModal.style.display = 'flex';
+        elements.quizModal.setAttribute('aria-hidden', 'false');
+        elements.quizModal.querySelector('.modal-content').focus();
+    }
+
+    function disableQuizOptions(isChecking = false) {
+         elements.quizOptions.querySelectorAll('button').forEach(btn => {
+            btn.disabled = true;
+            let opacity = '0.6'; // Default disabled opacity
+            // Preserve opacity if already styled correct/incorrect unless just checking
+            if (isChecking) {
+                 opacity = '0.7';
+            } else if (btn.classList.contains('correct')) {
+                 opacity = '1'; // Keep correct fully visible
+            } else if (btn.classList.contains('incorrect')) {
+                opacity = '0.7'; // Keep incorrect slightly more visible
+            }
+            btn.style.opacity = opacity;
+         });
+    }
+
+    function closeQuizModal() {
+        gameState.isSpinning = false;
+        elements.quizModal.style.display = 'none';
+        elements.quizModal.setAttribute('aria-hidden', 'true');
+        elements.quizOptions.innerHTML = '';
+        elements.quizFeedback.textContent = '';
+        if (!gameState.isGameOver && elements.spinBtn && !elements.spinBtn.disabled) { elements.spinBtn.focus(); } // Check element exists
+    }
+
+    // --- Start ---
+    initializeApp();
+
+  });
+</script>
+
+</body>
+</html>
